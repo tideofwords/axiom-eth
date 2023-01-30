@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":[["CliFinality",""]],"fn":[["main",""]],"struct":[["Cli","Generates multiple SNARKS for chains of block header hashes. Optionally does final processing to get merkle mountain range and/or produce EVM verifier contract code and calldata."]]};

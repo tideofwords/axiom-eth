@@ -1,0 +1,882 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/block_header/helpers.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>helpers.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../../axiom_eth/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><span id="1">1</span>
+<span id="2">2</span>
+<span id="3">3</span>
+<span id="4">4</span>
+<span id="5">5</span>
+<span id="6">6</span>
+<span id="7">7</span>
+<span id="8">8</span>
+<span id="9">9</span>
+<span id="10">10</span>
+<span id="11">11</span>
+<span id="12">12</span>
+<span id="13">13</span>
+<span id="14">14</span>
+<span id="15">15</span>
+<span id="16">16</span>
+<span id="17">17</span>
+<span id="18">18</span>
+<span id="19">19</span>
+<span id="20">20</span>
+<span id="21">21</span>
+<span id="22">22</span>
+<span id="23">23</span>
+<span id="24">24</span>
+<span id="25">25</span>
+<span id="26">26</span>
+<span id="27">27</span>
+<span id="28">28</span>
+<span id="29">29</span>
+<span id="30">30</span>
+<span id="31">31</span>
+<span id="32">32</span>
+<span id="33">33</span>
+<span id="34">34</span>
+<span id="35">35</span>
+<span id="36">36</span>
+<span id="37">37</span>
+<span id="38">38</span>
+<span id="39">39</span>
+<span id="40">40</span>
+<span id="41">41</span>
+<span id="42">42</span>
+<span id="43">43</span>
+<span id="44">44</span>
+<span id="45">45</span>
+<span id="46">46</span>
+<span id="47">47</span>
+<span id="48">48</span>
+<span id="49">49</span>
+<span id="50">50</span>
+<span id="51">51</span>
+<span id="52">52</span>
+<span id="53">53</span>
+<span id="54">54</span>
+<span id="55">55</span>
+<span id="56">56</span>
+<span id="57">57</span>
+<span id="58">58</span>
+<span id="59">59</span>
+<span id="60">60</span>
+<span id="61">61</span>
+<span id="62">62</span>
+<span id="63">63</span>
+<span id="64">64</span>
+<span id="65">65</span>
+<span id="66">66</span>
+<span id="67">67</span>
+<span id="68">68</span>
+<span id="69">69</span>
+<span id="70">70</span>
+<span id="71">71</span>
+<span id="72">72</span>
+<span id="73">73</span>
+<span id="74">74</span>
+<span id="75">75</span>
+<span id="76">76</span>
+<span id="77">77</span>
+<span id="78">78</span>
+<span id="79">79</span>
+<span id="80">80</span>
+<span id="81">81</span>
+<span id="82">82</span>
+<span id="83">83</span>
+<span id="84">84</span>
+<span id="85">85</span>
+<span id="86">86</span>
+<span id="87">87</span>
+<span id="88">88</span>
+<span id="89">89</span>
+<span id="90">90</span>
+<span id="91">91</span>
+<span id="92">92</span>
+<span id="93">93</span>
+<span id="94">94</span>
+<span id="95">95</span>
+<span id="96">96</span>
+<span id="97">97</span>
+<span id="98">98</span>
+<span id="99">99</span>
+<span id="100">100</span>
+<span id="101">101</span>
+<span id="102">102</span>
+<span id="103">103</span>
+<span id="104">104</span>
+<span id="105">105</span>
+<span id="106">106</span>
+<span id="107">107</span>
+<span id="108">108</span>
+<span id="109">109</span>
+<span id="110">110</span>
+<span id="111">111</span>
+<span id="112">112</span>
+<span id="113">113</span>
+<span id="114">114</span>
+<span id="115">115</span>
+<span id="116">116</span>
+<span id="117">117</span>
+<span id="118">118</span>
+<span id="119">119</span>
+<span id="120">120</span>
+<span id="121">121</span>
+<span id="122">122</span>
+<span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
+<span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
+<span id="143">143</span>
+<span id="144">144</span>
+<span id="145">145</span>
+<span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
+<span id="167">167</span>
+<span id="168">168</span>
+<span id="169">169</span>
+<span id="170">170</span>
+<span id="171">171</span>
+<span id="172">172</span>
+<span id="173">173</span>
+<span id="174">174</span>
+<span id="175">175</span>
+<span id="176">176</span>
+<span id="177">177</span>
+<span id="178">178</span>
+<span id="179">179</span>
+<span id="180">180</span>
+<span id="181">181</span>
+<span id="182">182</span>
+<span id="183">183</span>
+<span id="184">184</span>
+<span id="185">185</span>
+<span id="186">186</span>
+<span id="187">187</span>
+<span id="188">188</span>
+<span id="189">189</span>
+<span id="190">190</span>
+<span id="191">191</span>
+<span id="192">192</span>
+<span id="193">193</span>
+<span id="194">194</span>
+<span id="195">195</span>
+<span id="196">196</span>
+<span id="197">197</span>
+<span id="198">198</span>
+<span id="199">199</span>
+<span id="200">200</span>
+<span id="201">201</span>
+<span id="202">202</span>
+<span id="203">203</span>
+<span id="204">204</span>
+<span id="205">205</span>
+<span id="206">206</span>
+<span id="207">207</span>
+<span id="208">208</span>
+<span id="209">209</span>
+<span id="210">210</span>
+<span id="211">211</span>
+<span id="212">212</span>
+<span id="213">213</span>
+<span id="214">214</span>
+<span id="215">215</span>
+<span id="216">216</span>
+<span id="217">217</span>
+<span id="218">218</span>
+<span id="219">219</span>
+<span id="220">220</span>
+<span id="221">221</span>
+<span id="222">222</span>
+<span id="223">223</span>
+<span id="224">224</span>
+<span id="225">225</span>
+<span id="226">226</span>
+<span id="227">227</span>
+<span id="228">228</span>
+<span id="229">229</span>
+<span id="230">230</span>
+<span id="231">231</span>
+<span id="232">232</span>
+<span id="233">233</span>
+<span id="234">234</span>
+<span id="235">235</span>
+<span id="236">236</span>
+<span id="237">237</span>
+<span id="238">238</span>
+<span id="239">239</span>
+<span id="240">240</span>
+<span id="241">241</span>
+<span id="242">242</span>
+<span id="243">243</span>
+<span id="244">244</span>
+<span id="245">245</span>
+<span id="246">246</span>
+<span id="247">247</span>
+<span id="248">248</span>
+<span id="249">249</span>
+<span id="250">250</span>
+<span id="251">251</span>
+<span id="252">252</span>
+<span id="253">253</span>
+<span id="254">254</span>
+<span id="255">255</span>
+<span id="256">256</span>
+<span id="257">257</span>
+<span id="258">258</span>
+<span id="259">259</span>
+<span id="260">260</span>
+<span id="261">261</span>
+<span id="262">262</span>
+<span id="263">263</span>
+<span id="264">264</span>
+<span id="265">265</span>
+<span id="266">266</span>
+<span id="267">267</span>
+<span id="268">268</span>
+<span id="269">269</span>
+<span id="270">270</span>
+<span id="271">271</span>
+<span id="272">272</span>
+<span id="273">273</span>
+<span id="274">274</span>
+<span id="275">275</span>
+<span id="276">276</span>
+<span id="277">277</span>
+<span id="278">278</span>
+<span id="279">279</span>
+<span id="280">280</span>
+<span id="281">281</span>
+<span id="282">282</span>
+<span id="283">283</span>
+<span id="284">284</span>
+<span id="285">285</span>
+<span id="286">286</span>
+<span id="287">287</span>
+<span id="288">288</span>
+<span id="289">289</span>
+<span id="290">290</span>
+<span id="291">291</span>
+<span id="292">292</span>
+<span id="293">293</span>
+<span id="294">294</span>
+<span id="295">295</span>
+<span id="296">296</span>
+<span id="297">297</span>
+<span id="298">298</span>
+<span id="299">299</span>
+<span id="300">300</span>
+<span id="301">301</span>
+<span id="302">302</span>
+<span id="303">303</span>
+<span id="304">304</span>
+<span id="305">305</span>
+<span id="306">306</span>
+<span id="307">307</span>
+<span id="308">308</span>
+<span id="309">309</span>
+<span id="310">310</span>
+<span id="311">311</span>
+<span id="312">312</span>
+<span id="313">313</span>
+<span id="314">314</span>
+<span id="315">315</span>
+<span id="316">316</span>
+<span id="317">317</span>
+<span id="318">318</span>
+<span id="319">319</span>
+<span id="320">320</span>
+<span id="321">321</span>
+<span id="322">322</span>
+<span id="323">323</span>
+<span id="324">324</span>
+<span id="325">325</span>
+<span id="326">326</span>
+<span id="327">327</span>
+<span id="328">328</span>
+<span id="329">329</span>
+<span id="330">330</span>
+<span id="331">331</span>
+<span id="332">332</span>
+<span id="333">333</span>
+<span id="334">334</span>
+<span id="335">335</span>
+<span id="336">336</span>
+<span id="337">337</span>
+<span id="338">338</span>
+<span id="339">339</span>
+<span id="340">340</span>
+<span id="341">341</span>
+<span id="342">342</span>
+<span id="343">343</span>
+<span id="344">344</span>
+<span id="345">345</span>
+<span id="346">346</span>
+<span id="347">347</span>
+<span id="348">348</span>
+<span id="349">349</span>
+<span id="350">350</span>
+<span id="351">351</span>
+<span id="352">352</span>
+<span id="353">353</span>
+<span id="354">354</span>
+<span id="355">355</span>
+<span id="356">356</span>
+<span id="357">357</span>
+<span id="358">358</span>
+<span id="359">359</span>
+<span id="360">360</span>
+<span id="361">361</span>
+<span id="362">362</span>
+<span id="363">363</span>
+<span id="364">364</span>
+<span id="365">365</span>
+<span id="366">366</span>
+<span id="367">367</span>
+<span id="368">368</span>
+<span id="369">369</span>
+<span id="370">370</span>
+<span id="371">371</span>
+<span id="372">372</span>
+<span id="373">373</span>
+<span id="374">374</span>
+<span id="375">375</span>
+<span id="376">376</span>
+<span id="377">377</span>
+<span id="378">378</span>
+<span id="379">379</span>
+<span id="380">380</span>
+<span id="381">381</span>
+<span id="382">382</span>
+<span id="383">383</span>
+<span id="384">384</span>
+<span id="385">385</span>
+<span id="386">386</span>
+<span id="387">387</span>
+<span id="388">388</span>
+<span id="389">389</span>
+<span id="390">390</span>
+<span id="391">391</span>
+<span id="392">392</span>
+<span id="393">393</span>
+<span id="394">394</span>
+<span id="395">395</span>
+<span id="396">396</span>
+<span id="397">397</span>
+<span id="398">398</span>
+<span id="399">399</span>
+<span id="400">400</span>
+<span id="401">401</span>
+<span id="402">402</span>
+<span id="403">403</span>
+<span id="404">404</span>
+<span id="405">405</span>
+<span id="406">406</span>
+<span id="407">407</span>
+<span id="408">408</span>
+<span id="409">409</span>
+<span id="410">410</span>
+<span id="411">411</span>
+<span id="412">412</span>
+<span id="413">413</span>
+<span id="414">414</span>
+<span id="415">415</span>
+<span id="416">416</span>
+<span id="417">417</span>
+<span id="418">418</span>
+<span id="419">419</span>
+<span id="420">420</span>
+<span id="421">421</span>
+<span id="422">422</span>
+<span id="423">423</span>
+<span id="424">424</span>
+<span id="425">425</span>
+<span id="426">426</span>
+<span id="427">427</span>
+<span id="428">428</span>
+<span id="429">429</span>
+<span id="430">430</span>
+<span id="431">431</span>
+<span id="432">432</span>
+<span id="433">433</span>
+<span id="434">434</span>
+<span id="435">435</span>
+<span id="436">436</span>
+<span id="437">437</span>
+<span id="438">438</span>
+<span id="439">439</span>
+<span id="440">440</span>
+</pre><pre class="rust"><code><span class="kw">use super</span>::{
+    aggregation::{
+        AggregationWithKeccakConfigParams, EthBlockHeaderChainAggregationCircuit,
+        EthBlockHeaderChainFinalAggregationCircuit,
+    },
+    EthBlockHeaderChainCircuit,
+};
+<span class="kw">use crate</span>::{
+    providers::{GOERLI_PROVIDER_URL, MAINNET_PROVIDER_URL},
+    util::EthConfigParams,
+    Field, Network,
+};
+<span class="kw">use </span>core::cmp::min;
+<span class="kw">use </span>ethers_providers::{Http, Provider};
+<span class="kw">use </span>halo2_base::{
+    halo2_proofs::{
+        halo2curves::bn256::{Bn256, Fr, G1Affine},
+        plonk::ProvingKey,
+        poly::kzg::commitment::ParamsKZG,
+    },
+    utils::{fs::gen_srs, PrimeField},
+};
+<span class="kw">use </span>rand::SeedableRng;
+<span class="kw">use </span>rand_chacha::ChaCha20Rng;
+<span class="kw">use </span>snark_verifier_sdk::{
+    gen_pk,
+    halo2::{
+        aggregation::{load_verify_circuit_degree, PublicAggregationCircuit},
+        gen_snark_shplonk, read_snark,
+    },
+    CircuitExt, Snark, LIMBS,
+};
+<span class="kw">use </span>std::{
+    collections::HashMap,
+    env::{set_var, var},
+    path::Path,
+    vec,
+};
+
+<span class="attribute">#[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
+</span><span class="kw">pub enum </span>Finality {
+    <span class="doccomment">/// Produces as many snarks as needed to fit the entire block number range, without any final processing.
+    </span><span class="prelude-val">None</span>,
+    <span class="doccomment">/// The block number range must fit within the specified max depth.
+    /// Produces a single final snark with the starting &amp; ending block numbers, previous and last block hashes,
+    /// and merkle mountain range as output.
+    </span>Merkle,
+    <span class="doccomment">/// The block number range must fit within the specified max depth. `Evm(round)` performs `round + 1`
+    /// rounds of SNARK verification on the final `Merkle` circuit
+    </span>Evm(usize),
+}
+
+<span class="attribute">#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+</span><span class="kw">pub struct </span>CircuitType {
+    <span class="kw">pub </span>depth: usize,
+    <span class="kw">pub </span>initial_depth: usize,
+    <span class="kw">pub </span>finality: Finality,
+}
+
+<span class="kw">impl </span>CircuitType {
+    <span class="kw">pub fn </span>new(depth: usize, initial_depth: usize, finality: Finality) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{ depth, initial_depth, finality }
+    }
+
+    <span class="kw">pub fn </span>prev(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
+        <span class="macro">assert!</span>(<span class="self">self</span>.depth != <span class="self">self</span>.initial_depth, <span class="string">&quot;Trying to call prev on initial circuit&quot;</span>);
+        <span class="kw">match </span><span class="self">self</span>.finality {
+            Finality::None | Finality::Merkle =&gt; {
+                <span class="self">Self</span>::new(<span class="self">self</span>.depth - <span class="number">1</span>, <span class="self">self</span>.initial_depth, Finality::None)
+            }
+            Finality::Evm(round) =&gt; {
+                <span class="kw">if </span>round == <span class="number">0 </span>{
+                    <span class="self">Self</span>::new(<span class="self">self</span>.depth, <span class="self">self</span>.initial_depth, Finality::Merkle)
+                } <span class="kw">else </span>{
+                    <span class="self">Self</span>::new(<span class="self">self</span>.depth, <span class="self">self</span>.initial_depth, Finality::Evm(round - <span class="number">1</span>))
+                }
+            }
+        }
+    }
+
+    <span class="kw">pub fn </span>fname_prefix(<span class="kw-2">&amp;</span><span class="self">self</span>, network: Network) -&gt; String {
+        <span class="kw">if </span><span class="self">self</span>.depth == <span class="self">self</span>.initial_depth {
+            <span class="macro">format!</span>(<span class="string">&quot;data/headers/{network}_{}&quot;</span>, <span class="self">self</span>.depth)
+        } <span class="kw">else </span>{
+            <span class="macro">format!</span>(<span class="string">&quot;data/headers/{network}_{}_{}&quot;</span>, <span class="self">self</span>.depth, <span class="self">self</span>.initial_depth)
+        }
+    }
+
+    <span class="kw">pub fn </span>fname_suffix(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; String {
+        <span class="kw">match </span><span class="self">self</span>.finality {
+            Finality::None =&gt; <span class="string">&quot;&quot;</span>.to_string(),
+            Finality::Merkle =&gt; <span class="string">&quot;_final&quot;</span>.to_string(),
+            Finality::Evm(round) =&gt; <span class="macro">format!</span>(<span class="string">&quot;_for_evm_{round}&quot;</span>),
+        }
+    }
+
+    <span class="kw">pub fn </span>pkey_name(<span class="kw-2">&amp;</span><span class="self">self</span>, network: Network) -&gt; String {
+        <span class="macro">format!</span>(<span class="string">&quot;{}{}.pkey&quot;</span>, <span class="self">self</span>.fname_prefix(network), <span class="self">self</span>.fname_suffix())
+    }
+}
+
+<span class="attribute">#[derive(Clone, Copy, Debug)]
+</span><span class="kw">pub struct </span>Task {
+    <span class="kw">pub </span>start: u32,
+    <span class="kw">pub </span>end: u32,
+    <span class="kw">pub </span>circuit_type: CircuitType,
+}
+
+<span class="kw">impl </span>Task {
+    <span class="kw">pub fn </span>new(start: u32, end: u32, circuit_type: CircuitType) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{ start, end, circuit_type }
+    }
+
+    <span class="kw">pub fn </span>snark_name(<span class="kw-2">&amp;</span><span class="self">self</span>, network: Network) -&gt; String {
+        <span class="macro">format!</span>(
+            <span class="string">&quot;{}_{:06x}_{:06x}{}.snark&quot;</span>,
+            <span class="self">self</span>.circuit_type.fname_prefix(network),
+            <span class="self">self</span>.start,
+            <span class="self">self</span>.end,
+            <span class="self">self</span>.circuit_type.fname_suffix()
+        )
+    }
+
+    <span class="kw">pub fn </span>read_snark(<span class="kw-2">&amp;</span><span class="self">self</span>, network: Network) -&gt; <span class="prelude-ty">Result</span>&lt;Snark, bincode::Error&gt; {
+        <span class="macro">assert!</span>(<span class="self">self</span>.end - <span class="self">self</span>.start &lt; <span class="number">1 </span>&lt;&lt; <span class="self">self</span>.circuit_type.depth);
+        read_snark(<span class="self">self</span>.snark_name(network))
+    }
+}
+
+<span class="kw">pub enum </span>AnyCircuit {
+    Initial(EthBlockHeaderChainCircuit&lt;Fr&gt;),
+    Intermediate(EthBlockHeaderChainAggregationCircuit),
+    Final(EthBlockHeaderChainFinalAggregationCircuit),
+    ForEvm(PublicAggregationCircuit),
+}
+
+<span class="kw">pub struct </span>Sequencer {
+    <span class="kw">pub </span>pkeys: HashMap&lt;CircuitType, ProvingKey&lt;G1Affine&gt;&gt;,
+    <span class="kw">pub </span>params_k: HashMap&lt;CircuitType, u32&gt;,
+    <span class="kw">pub </span>params: HashMap&lt;u32, ParamsKZG&lt;Bn256&gt;&gt;,
+    <span class="kw">pub </span>rng: ChaCha20Rng,
+    <span class="kw">pub </span>provider: Provider&lt;Http&gt;,
+    <span class="kw">pub </span>network: Network,
+}
+
+<span class="kw">impl </span>Sequencer {
+    <span class="kw">pub fn </span>new(network: Network) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>infura_id = var(<span class="string">&quot;INFURA_ID&quot;</span>).expect(<span class="string">&quot;Infura ID not found&quot;</span>);
+        <span class="kw">let </span>provider_url = <span class="kw">match </span>network {
+            Network::Mainnet =&gt; MAINNET_PROVIDER_URL,
+            Network::Goerli =&gt; GOERLI_PROVIDER_URL,
+        };
+        <span class="kw">let </span>provider = Provider::&lt;Http&gt;::try_from(<span class="macro">format!</span>(<span class="string">&quot;{provider_url}{infura_id}&quot;</span>).as_str())
+            .expect(<span class="string">&quot;could not instantiate HTTP Provider&quot;</span>);
+
+        Sequencer {
+            pkeys: HashMap::new(),
+            params_k: HashMap::new(),
+            params: HashMap::new(),
+            provider,
+            network,
+            rng: ChaCha20Rng::from_entropy(),
+        }
+    }
+
+    <span class="kw">pub fn </span>get_params(<span class="kw-2">&amp;mut </span><span class="self">self</span>, circuit_type: CircuitType) -&gt; u32 {
+        <span class="kw">let </span>network = <span class="self">self</span>.network;
+        <span class="kw">let </span>CircuitType { depth, initial_depth, finality } = circuit_type;
+        <span class="kw">let </span>fname_prefix = <span class="kw">if </span>depth == initial_depth {
+            <span class="macro">format!</span>(<span class="string">&quot;configs/headers/{network}_{depth}&quot;</span>)
+        } <span class="kw">else </span>{
+            <span class="macro">format!</span>(<span class="string">&quot;configs/headers/{network}_{depth}_{initial_depth}&quot;</span>)
+        };
+        <span class="kw">let </span>k = <span class="kw">if </span>depth == initial_depth {
+            set_var(<span class="string">&quot;BLOCK_HEADER_CONFIG&quot;</span>, <span class="macro">format!</span>(<span class="string">&quot;{fname_prefix}.json&quot;</span>));
+            EthConfigParams::get_header().degree
+        } <span class="kw">else </span>{
+            <span class="kw">match </span>finality {
+                Finality::None =&gt; {
+                    set_var(<span class="string">&quot;VERIFY_CONFIG&quot;</span>, <span class="macro">format!</span>(<span class="string">&quot;{fname_prefix}.json&quot;</span>));
+                    load_verify_circuit_degree()
+                }
+                Finality::Merkle =&gt; {
+                    set_var(<span class="string">&quot;FINAL_AGGREGATION_CONFIG&quot;</span>, <span class="macro">format!</span>(<span class="string">&quot;{fname_prefix}_final.json&quot;</span>));
+                    AggregationWithKeccakConfigParams::get().aggregation.degree
+                }
+                Finality::Evm(round) =&gt; {
+                    set_var(<span class="string">&quot;VERIFY_CONFIG&quot;</span>, <span class="macro">format!</span>(<span class="string">&quot;{fname_prefix}_for_evm_{round}.json&quot;</span>));
+                    load_verify_circuit_degree()
+                }
+            }
+        };
+        <span class="self">self</span>.params.entry(k).or_insert_with(|| gen_srs(k));
+        <span class="self">self</span>.params_k.insert(circuit_type, k);
+        k
+    }
+
+    <span class="comment">// recursively generates necessary snarks to create circuit
+    </span><span class="kw">pub fn </span>get_circuit(<span class="kw-2">&amp;mut </span><span class="self">self</span>, task: Task) -&gt; AnyCircuit {
+        <span class="kw">let </span>Task { start, end, circuit_type } = task;
+        <span class="kw">let </span>CircuitType { depth, initial_depth, finality } = circuit_type;
+        <span class="macro">assert!</span>(end - start &lt; <span class="number">1 </span>&lt;&lt; depth);
+        <span class="kw">if </span>depth == initial_depth {
+            <span class="comment">// set environmental vars
+            </span><span class="self">self</span>.get_params(circuit_type);
+            <span class="kw">let </span>circuit = EthBlockHeaderChainCircuit::from_provider(
+                <span class="kw-2">&amp;</span><span class="self">self</span>.provider,
+                <span class="self">self</span>.network,
+                start,
+                end - start + <span class="number">1</span>,
+                depth,
+            );
+            AnyCircuit::Initial(circuit)
+        } <span class="kw">else </span>{
+            <span class="kw">let </span>prev_type = circuit_type.prev();
+            <span class="kw">let </span><span class="kw-2">mut </span>snarks: Vec&lt;Snark&gt;;
+            <span class="kw">let </span>prev_depth = prev_type.depth;
+            snarks = (start..=end)
+                .step_by(<span class="number">1 </span>&lt;&lt; prev_depth)
+                .map(|i| {
+                    <span class="self">self</span>.get_snark(Task::new(i, min(end, i + (<span class="number">1 </span>&lt;&lt; prev_depth) - <span class="number">1</span>), prev_type))
+                })
+                .collect();
+            <span class="kw">if </span>(finality == Finality::None || finality == Finality::Merkle) &amp;&amp; snarks.len() != <span class="number">2 </span>{
+                snarks.push(snarks[<span class="number">0</span>].clone());
+            }
+            <span class="kw">let </span>k = <span class="self">self</span>.get_params(circuit_type);
+            <span class="kw">let </span>params = <span class="self">self</span>.params.get(<span class="kw-2">&amp;</span>k).unwrap();
+            <span class="kw">let </span><span class="kw-2">mut </span>rng = <span class="self">self</span>.rng.clone();
+            <span class="kw">match </span>finality {
+                Finality::None =&gt; {
+                    <span class="kw">let </span>circuit = EthBlockHeaderChainAggregationCircuit::new(
+                        params,
+                        snarks,
+                        <span class="kw-2">&amp;mut </span>rng,
+                        end - start + <span class="number">1</span>,
+                        depth,
+                        initial_depth,
+                    );
+                    AnyCircuit::Intermediate(circuit)
+                }
+                Finality::Merkle =&gt; {
+                    <span class="kw">let </span>circuit = EthBlockHeaderChainFinalAggregationCircuit::new(
+                        params,
+                        snarks,
+                        <span class="kw-2">&amp;mut </span>rng,
+                        end - start + <span class="number">1</span>,
+                        depth,
+                        initial_depth,
+                    );
+                    AnyCircuit::Final(circuit)
+                }
+                Finality::Evm(<span class="kw">_</span>) =&gt; {
+                    <span class="kw">let </span>circuit = PublicAggregationCircuit::new(params, snarks, <span class="bool-val">true</span>, <span class="kw-2">&amp;mut </span>rng);
+                    AnyCircuit::ForEvm(circuit)
+                }
+            }
+        }
+    }
+
+    <span class="comment">// recursively generates necessary circuits and snarks to create snark
+    </span><span class="kw">pub fn </span>get_snark(<span class="kw-2">&amp;mut </span><span class="self">self</span>, task: Task) -&gt; Snark {
+        <span class="kw">let </span>network = <span class="self">self</span>.network;
+        <span class="kw">if let </span><span class="prelude-val">Ok</span>(snark) = task.read_snark(network) {
+            <span class="kw">return </span>snark;
+        }
+        <span class="kw">let </span>circuit = <span class="self">self</span>.get_circuit(task);
+        <span class="kw">let </span>circuit_type = task.circuit_type;
+        <span class="kw">let </span>params = <span class="kw-2">&amp;</span><span class="self">self</span>.params[<span class="kw-2">&amp;</span><span class="self">self</span>.params_k[<span class="kw-2">&amp;</span>circuit_type]];
+        <span class="kw">let </span>pk_name = circuit_type.pkey_name(network);
+        <span class="kw">let </span>pk_path = <span class="prelude-val">Some</span>(Path::new(<span class="kw-2">&amp;</span>pk_name));
+        <span class="kw">let </span>pk = <span class="self">self</span>.pkeys.entry(circuit_type).or_insert_with(|| {
+            <span class="comment">// as you can see we do the same thing for each circuit, but because `Circuit` is
+            // not an object-safe trait we can&#39;t put it in a `Box`
+            </span><span class="kw">match </span><span class="kw-2">&amp;</span>circuit {
+                AnyCircuit::Initial(circuit) =&gt; gen_pk(params, circuit, pk_path),
+                AnyCircuit::Intermediate(circuit) =&gt; gen_pk(params, circuit, pk_path),
+                AnyCircuit::Final(circuit) =&gt; gen_pk(params, circuit, pk_path),
+                AnyCircuit::ForEvm(circuit) =&gt; gen_pk(params, circuit, pk_path),
+            }
+        });
+        <span class="kw">let </span>snark_path = <span class="prelude-val">Some</span>(task.snark_name(network));
+        <span class="kw">let </span><span class="kw-2">mut </span>rng = <span class="self">self</span>.rng.clone();
+        <span class="kw">match </span>circuit {
+            AnyCircuit::Initial(circuit) =&gt; {
+                gen_snark_shplonk(params, pk, circuit, <span class="kw-2">&amp;mut </span>rng, snark_path)
+            }
+            AnyCircuit::Intermediate(circuit) =&gt; {
+                gen_snark_shplonk(params, pk, circuit, <span class="kw-2">&amp;mut </span>rng, snark_path)
+            }
+            AnyCircuit::Final(circuit) =&gt; {
+                gen_snark_shplonk(params, pk, circuit, <span class="kw-2">&amp;mut </span>rng, snark_path)
+            }
+            AnyCircuit::ForEvm(circuit) =&gt; {
+                gen_snark_shplonk(params, pk, circuit, <span class="kw-2">&amp;mut </span>rng, snark_path)
+            }
+        }
+    }
+
+    <span class="attribute">#[cfg(feature = <span class="string">&quot;evm&quot;</span>)]
+    </span><span class="kw">pub fn </span>get_calldata(<span class="kw-2">&amp;mut </span><span class="self">self</span>, task: Task, generate_smart_contract: bool) -&gt; Vec&lt;u8&gt; {
+        <span class="kw">let </span>network = <span class="self">self</span>.network;
+        <span class="kw">let </span>circuit_type = task.circuit_type;
+        <span class="macro">assert!</span>(<span class="macro">matches!</span>(circuit_type.finality, Finality::Evm(<span class="kw">_</span>)));
+        <span class="kw">let </span>fname = <span class="macro">format!</span>(
+            <span class="string">&quot;data/headers/{}_{}_{}_{:06x}_{:06x}.calldata&quot;</span>,
+            network, circuit_type.depth, circuit_type.initial_depth, task.start, task.end
+        );
+        <span class="kw">if let </span><span class="prelude-val">Ok</span>(calldata) = std::fs::read(<span class="kw-2">&amp;</span>fname) {
+            <span class="kw">return </span>calldata;
+        }
+
+        <span class="kw">let </span>circuit = <span class="self">self</span>.get_circuit(task);
+        <span class="kw">match </span>circuit {
+            AnyCircuit::ForEvm(circuit) =&gt; {
+                <span class="self">self</span>.write_calldata_generic(circuit, circuit_type, <span class="kw-2">&amp;</span>fname, generate_smart_contract)
+            }
+            <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
+        }
+    }
+
+    <span class="attribute">#[cfg(feature = <span class="string">&quot;evm&quot;</span>)]
+    </span><span class="kw">fn </span>write_calldata_generic&lt;ConcreteCircuit: CircuitExt&lt;Fr&gt;&gt;(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        circuit: ConcreteCircuit,
+        circuit_type: CircuitType,
+        path: <span class="kw">impl </span>AsRef&lt;Path&gt;,
+        generate_smart_contract: bool,
+    ) -&gt; Vec&lt;u8&gt; {
+        <span class="attribute">#[allow(unused_imports)]
+        </span><span class="kw">use </span>ethers_core::utils::hex;
+        <span class="kw">use </span>snark_verifier::loader::evm::encode_calldata;
+        <span class="kw">use </span>snark_verifier_sdk::evm::{
+            evm_verify, gen_evm_proof_shplonk, gen_evm_verifier_shplonk,
+        };
+        <span class="kw">use </span>std::fs;
+
+        <span class="kw">let </span>params = <span class="kw-2">&amp;</span><span class="self">self</span>.params[<span class="kw-2">&amp;</span><span class="self">self</span>.params_k[<span class="kw-2">&amp;</span>circuit_type]];
+        <span class="kw">let </span>pk_name = circuit_type.pkey_name(<span class="self">self</span>.network);
+        <span class="kw">let </span>pk_path = <span class="prelude-val">Some</span>(Path::new(<span class="kw-2">&amp;</span>pk_name));
+        <span class="kw">let </span>pk =
+            <span class="self">self</span>.pkeys.entry(circuit_type).or_insert_with(|| gen_pk(params, <span class="kw-2">&amp;</span>circuit, pk_path));
+        <span class="kw">let </span>instances = circuit.instances();
+        <span class="kw">let </span><span class="kw-2">mut </span>rng = <span class="self">self</span>.rng.clone();
+        <span class="kw">let </span>proof = gen_evm_proof_shplonk(params, pk, circuit, instances.clone(), <span class="kw-2">&amp;mut </span>rng);
+        <span class="kw">let </span>calldata = encode_calldata(<span class="kw-2">&amp;</span>instances, <span class="kw-2">&amp;</span>proof);
+        fs::write(path, hex::encode(<span class="kw-2">&amp;</span>calldata)).expect(<span class="string">&quot;write calldata should not fail&quot;</span>);
+
+        <span class="kw">if </span>generate_smart_contract {
+            <span class="kw">let </span>num_instances = instances[<span class="number">0</span>].len();
+            <span class="kw">let </span>deployment_code = gen_evm_verifier_shplonk::&lt;ConcreteCircuit&gt;(
+                params,
+                pk.get_vk(),
+                <span class="macro">vec!</span>[num_instances],
+                <span class="prelude-val">Some</span>(Path::new(<span class="kw-2">&amp;</span><span class="macro">format!</span>(
+                    <span class="string">&quot;data/headers/{}_{}_{}.yul&quot;</span>,
+                    <span class="self">self</span>.network, circuit_type.depth, circuit_type.initial_depth
+                ))),
+            );
+
+            evm_verify(deployment_code, instances, proof);
+        }
+        calldata
+    }
+}
+
+<span class="kw">impl</span>&lt;F: Field + PrimeField&gt; CircuitExt&lt;F&gt; <span class="kw">for </span>EthBlockHeaderChainCircuit&lt;F&gt; {
+    <span class="kw">fn </span>num_instance(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Vec&lt;usize&gt; {
+        <span class="macro">vec!</span>[<span class="self">Self</span>::get_num_instance(<span class="self">self</span>.max_depth)]
+    }
+
+    <span class="kw">fn </span>instances(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Vec&lt;Vec&lt;F&gt;&gt; {
+        <span class="macro">vec!</span>[<span class="self">self</span>.instance.to_instance()]
+    }
+}
+
+<span class="comment">// Given
+// - a JSON-RPC provider
+// - choice of EVM network
+// - a range of block numbers
+// - a universal trusted setup,
+//
+// this function will generate a ZK proof for the block header chain between blocks `start_block_number` and `end_block_number` inclusive.
+//
+// If a proving key is provided, it will be used to generate the proof. Otherwise, a new proving key will be generated.
+//
+// The SNARK&#39;s public instance will include a merkle mountain range up to depth `max_depth`.
+//
+// This SNARK does not use aggregation: it uses a single `EthBlockHeaderChainCircle` circuit,
+// so it may not be suitable for large block ranges.
+
+// Given
+// - a JSON-RPC provider
+// - choice of EVM network
+// - a range of block numbers
+// - a universal trusted setup,
+//
+// this function will generate a ZK proof for the block header chain between blocks `start_block_number` and `end_block_number` inclusive. The public instances are NOT finalized,
+// as the merkle mountain range is not fully computed.
+//
+// If a proving key is provided, it will be used to generate the proof. Otherwise, a new proving key will be generated.
+//
+// This SNARK uses recursive aggregation between depth `max_depth` and `initial_depth + 1`. At `initial_depth` it falls back to the `EthBlockHeaderChainCircle` circuit.
+// At each depth, it will try to load snarks of the previous depth from disk, and if it can&#39;t find them, it will generate them.
+
+</span><span class="kw">impl </span>CircuitExt&lt;Fr&gt; <span class="kw">for </span>EthBlockHeaderChainAggregationCircuit {
+    <span class="kw">fn </span>num_instance(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Vec&lt;usize&gt; {
+        <span class="macro">vec!</span>[<span class="number">4 </span>* LIMBS + <span class="self">Self</span>::get_num_instance(<span class="self">self</span>.max_depth, <span class="self">self</span>.initial_depth)]
+    }
+
+    <span class="kw">fn </span>instances(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Vec&lt;Vec&lt;Fr&gt;&gt; {
+        <span class="macro">vec!</span>[<span class="self">self</span>.instance()]
+    }
+}
+
+<span class="comment">// Given
+// - a JSON-RPC provider
+// - choice of EVM network
+// - a range of block numbers
+// - a universal trusted setup,
+//
+// this function will generate a ZK proof for the block header chain between blocks `start_block_number` and `end_block_number` inclusive. The public output is FINALIZED, with
+// a complete merkle mountain range.
+//
+// If a proving key is provided, it will be used to generate the proof. Otherwise, a new proving key will be generated.
+//
+// This SNARK uses recursive aggregation between depth `max_depth` and `initial_depth + 1`. At `initial_depth` it falls back to the `EthBlockHeaderChainCircle` circuit.
+// At each depth, it will try to load snarks of the previous depth from disk, and if it can&#39;t find them, it will generate them.
+//
+// Note: we assume that `params` is the correct size for the circuit.
+
+</span><span class="kw">impl </span>CircuitExt&lt;Fr&gt; <span class="kw">for </span>EthBlockHeaderChainFinalAggregationCircuit {
+    <span class="kw">fn </span>num_instance(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Vec&lt;usize&gt; {
+        <span class="macro">vec!</span>[<span class="number">4 </span>* LIMBS + <span class="self">Self</span>::get_num_instance(<span class="self">self</span>.<span class="number">0</span>.max_depth)]
+    }
+
+    <span class="kw">fn </span>instances(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Vec&lt;Vec&lt;Fr&gt;&gt; {
+        <span class="macro">vec!</span>[<span class="self">self</span>.instance()]
+    }
+}
+</code></pre></div>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="axiom_eth" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.66.0-nightly (0da281b60 2022-10-27)" ></div></body></html>

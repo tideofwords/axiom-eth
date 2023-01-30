@@ -1,0 +1,2060 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/mpt/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../../axiom_eth/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><span id="1">1</span>
+<span id="2">2</span>
+<span id="3">3</span>
+<span id="4">4</span>
+<span id="5">5</span>
+<span id="6">6</span>
+<span id="7">7</span>
+<span id="8">8</span>
+<span id="9">9</span>
+<span id="10">10</span>
+<span id="11">11</span>
+<span id="12">12</span>
+<span id="13">13</span>
+<span id="14">14</span>
+<span id="15">15</span>
+<span id="16">16</span>
+<span id="17">17</span>
+<span id="18">18</span>
+<span id="19">19</span>
+<span id="20">20</span>
+<span id="21">21</span>
+<span id="22">22</span>
+<span id="23">23</span>
+<span id="24">24</span>
+<span id="25">25</span>
+<span id="26">26</span>
+<span id="27">27</span>
+<span id="28">28</span>
+<span id="29">29</span>
+<span id="30">30</span>
+<span id="31">31</span>
+<span id="32">32</span>
+<span id="33">33</span>
+<span id="34">34</span>
+<span id="35">35</span>
+<span id="36">36</span>
+<span id="37">37</span>
+<span id="38">38</span>
+<span id="39">39</span>
+<span id="40">40</span>
+<span id="41">41</span>
+<span id="42">42</span>
+<span id="43">43</span>
+<span id="44">44</span>
+<span id="45">45</span>
+<span id="46">46</span>
+<span id="47">47</span>
+<span id="48">48</span>
+<span id="49">49</span>
+<span id="50">50</span>
+<span id="51">51</span>
+<span id="52">52</span>
+<span id="53">53</span>
+<span id="54">54</span>
+<span id="55">55</span>
+<span id="56">56</span>
+<span id="57">57</span>
+<span id="58">58</span>
+<span id="59">59</span>
+<span id="60">60</span>
+<span id="61">61</span>
+<span id="62">62</span>
+<span id="63">63</span>
+<span id="64">64</span>
+<span id="65">65</span>
+<span id="66">66</span>
+<span id="67">67</span>
+<span id="68">68</span>
+<span id="69">69</span>
+<span id="70">70</span>
+<span id="71">71</span>
+<span id="72">72</span>
+<span id="73">73</span>
+<span id="74">74</span>
+<span id="75">75</span>
+<span id="76">76</span>
+<span id="77">77</span>
+<span id="78">78</span>
+<span id="79">79</span>
+<span id="80">80</span>
+<span id="81">81</span>
+<span id="82">82</span>
+<span id="83">83</span>
+<span id="84">84</span>
+<span id="85">85</span>
+<span id="86">86</span>
+<span id="87">87</span>
+<span id="88">88</span>
+<span id="89">89</span>
+<span id="90">90</span>
+<span id="91">91</span>
+<span id="92">92</span>
+<span id="93">93</span>
+<span id="94">94</span>
+<span id="95">95</span>
+<span id="96">96</span>
+<span id="97">97</span>
+<span id="98">98</span>
+<span id="99">99</span>
+<span id="100">100</span>
+<span id="101">101</span>
+<span id="102">102</span>
+<span id="103">103</span>
+<span id="104">104</span>
+<span id="105">105</span>
+<span id="106">106</span>
+<span id="107">107</span>
+<span id="108">108</span>
+<span id="109">109</span>
+<span id="110">110</span>
+<span id="111">111</span>
+<span id="112">112</span>
+<span id="113">113</span>
+<span id="114">114</span>
+<span id="115">115</span>
+<span id="116">116</span>
+<span id="117">117</span>
+<span id="118">118</span>
+<span id="119">119</span>
+<span id="120">120</span>
+<span id="121">121</span>
+<span id="122">122</span>
+<span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
+<span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
+<span id="143">143</span>
+<span id="144">144</span>
+<span id="145">145</span>
+<span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
+<span id="167">167</span>
+<span id="168">168</span>
+<span id="169">169</span>
+<span id="170">170</span>
+<span id="171">171</span>
+<span id="172">172</span>
+<span id="173">173</span>
+<span id="174">174</span>
+<span id="175">175</span>
+<span id="176">176</span>
+<span id="177">177</span>
+<span id="178">178</span>
+<span id="179">179</span>
+<span id="180">180</span>
+<span id="181">181</span>
+<span id="182">182</span>
+<span id="183">183</span>
+<span id="184">184</span>
+<span id="185">185</span>
+<span id="186">186</span>
+<span id="187">187</span>
+<span id="188">188</span>
+<span id="189">189</span>
+<span id="190">190</span>
+<span id="191">191</span>
+<span id="192">192</span>
+<span id="193">193</span>
+<span id="194">194</span>
+<span id="195">195</span>
+<span id="196">196</span>
+<span id="197">197</span>
+<span id="198">198</span>
+<span id="199">199</span>
+<span id="200">200</span>
+<span id="201">201</span>
+<span id="202">202</span>
+<span id="203">203</span>
+<span id="204">204</span>
+<span id="205">205</span>
+<span id="206">206</span>
+<span id="207">207</span>
+<span id="208">208</span>
+<span id="209">209</span>
+<span id="210">210</span>
+<span id="211">211</span>
+<span id="212">212</span>
+<span id="213">213</span>
+<span id="214">214</span>
+<span id="215">215</span>
+<span id="216">216</span>
+<span id="217">217</span>
+<span id="218">218</span>
+<span id="219">219</span>
+<span id="220">220</span>
+<span id="221">221</span>
+<span id="222">222</span>
+<span id="223">223</span>
+<span id="224">224</span>
+<span id="225">225</span>
+<span id="226">226</span>
+<span id="227">227</span>
+<span id="228">228</span>
+<span id="229">229</span>
+<span id="230">230</span>
+<span id="231">231</span>
+<span id="232">232</span>
+<span id="233">233</span>
+<span id="234">234</span>
+<span id="235">235</span>
+<span id="236">236</span>
+<span id="237">237</span>
+<span id="238">238</span>
+<span id="239">239</span>
+<span id="240">240</span>
+<span id="241">241</span>
+<span id="242">242</span>
+<span id="243">243</span>
+<span id="244">244</span>
+<span id="245">245</span>
+<span id="246">246</span>
+<span id="247">247</span>
+<span id="248">248</span>
+<span id="249">249</span>
+<span id="250">250</span>
+<span id="251">251</span>
+<span id="252">252</span>
+<span id="253">253</span>
+<span id="254">254</span>
+<span id="255">255</span>
+<span id="256">256</span>
+<span id="257">257</span>
+<span id="258">258</span>
+<span id="259">259</span>
+<span id="260">260</span>
+<span id="261">261</span>
+<span id="262">262</span>
+<span id="263">263</span>
+<span id="264">264</span>
+<span id="265">265</span>
+<span id="266">266</span>
+<span id="267">267</span>
+<span id="268">268</span>
+<span id="269">269</span>
+<span id="270">270</span>
+<span id="271">271</span>
+<span id="272">272</span>
+<span id="273">273</span>
+<span id="274">274</span>
+<span id="275">275</span>
+<span id="276">276</span>
+<span id="277">277</span>
+<span id="278">278</span>
+<span id="279">279</span>
+<span id="280">280</span>
+<span id="281">281</span>
+<span id="282">282</span>
+<span id="283">283</span>
+<span id="284">284</span>
+<span id="285">285</span>
+<span id="286">286</span>
+<span id="287">287</span>
+<span id="288">288</span>
+<span id="289">289</span>
+<span id="290">290</span>
+<span id="291">291</span>
+<span id="292">292</span>
+<span id="293">293</span>
+<span id="294">294</span>
+<span id="295">295</span>
+<span id="296">296</span>
+<span id="297">297</span>
+<span id="298">298</span>
+<span id="299">299</span>
+<span id="300">300</span>
+<span id="301">301</span>
+<span id="302">302</span>
+<span id="303">303</span>
+<span id="304">304</span>
+<span id="305">305</span>
+<span id="306">306</span>
+<span id="307">307</span>
+<span id="308">308</span>
+<span id="309">309</span>
+<span id="310">310</span>
+<span id="311">311</span>
+<span id="312">312</span>
+<span id="313">313</span>
+<span id="314">314</span>
+<span id="315">315</span>
+<span id="316">316</span>
+<span id="317">317</span>
+<span id="318">318</span>
+<span id="319">319</span>
+<span id="320">320</span>
+<span id="321">321</span>
+<span id="322">322</span>
+<span id="323">323</span>
+<span id="324">324</span>
+<span id="325">325</span>
+<span id="326">326</span>
+<span id="327">327</span>
+<span id="328">328</span>
+<span id="329">329</span>
+<span id="330">330</span>
+<span id="331">331</span>
+<span id="332">332</span>
+<span id="333">333</span>
+<span id="334">334</span>
+<span id="335">335</span>
+<span id="336">336</span>
+<span id="337">337</span>
+<span id="338">338</span>
+<span id="339">339</span>
+<span id="340">340</span>
+<span id="341">341</span>
+<span id="342">342</span>
+<span id="343">343</span>
+<span id="344">344</span>
+<span id="345">345</span>
+<span id="346">346</span>
+<span id="347">347</span>
+<span id="348">348</span>
+<span id="349">349</span>
+<span id="350">350</span>
+<span id="351">351</span>
+<span id="352">352</span>
+<span id="353">353</span>
+<span id="354">354</span>
+<span id="355">355</span>
+<span id="356">356</span>
+<span id="357">357</span>
+<span id="358">358</span>
+<span id="359">359</span>
+<span id="360">360</span>
+<span id="361">361</span>
+<span id="362">362</span>
+<span id="363">363</span>
+<span id="364">364</span>
+<span id="365">365</span>
+<span id="366">366</span>
+<span id="367">367</span>
+<span id="368">368</span>
+<span id="369">369</span>
+<span id="370">370</span>
+<span id="371">371</span>
+<span id="372">372</span>
+<span id="373">373</span>
+<span id="374">374</span>
+<span id="375">375</span>
+<span id="376">376</span>
+<span id="377">377</span>
+<span id="378">378</span>
+<span id="379">379</span>
+<span id="380">380</span>
+<span id="381">381</span>
+<span id="382">382</span>
+<span id="383">383</span>
+<span id="384">384</span>
+<span id="385">385</span>
+<span id="386">386</span>
+<span id="387">387</span>
+<span id="388">388</span>
+<span id="389">389</span>
+<span id="390">390</span>
+<span id="391">391</span>
+<span id="392">392</span>
+<span id="393">393</span>
+<span id="394">394</span>
+<span id="395">395</span>
+<span id="396">396</span>
+<span id="397">397</span>
+<span id="398">398</span>
+<span id="399">399</span>
+<span id="400">400</span>
+<span id="401">401</span>
+<span id="402">402</span>
+<span id="403">403</span>
+<span id="404">404</span>
+<span id="405">405</span>
+<span id="406">406</span>
+<span id="407">407</span>
+<span id="408">408</span>
+<span id="409">409</span>
+<span id="410">410</span>
+<span id="411">411</span>
+<span id="412">412</span>
+<span id="413">413</span>
+<span id="414">414</span>
+<span id="415">415</span>
+<span id="416">416</span>
+<span id="417">417</span>
+<span id="418">418</span>
+<span id="419">419</span>
+<span id="420">420</span>
+<span id="421">421</span>
+<span id="422">422</span>
+<span id="423">423</span>
+<span id="424">424</span>
+<span id="425">425</span>
+<span id="426">426</span>
+<span id="427">427</span>
+<span id="428">428</span>
+<span id="429">429</span>
+<span id="430">430</span>
+<span id="431">431</span>
+<span id="432">432</span>
+<span id="433">433</span>
+<span id="434">434</span>
+<span id="435">435</span>
+<span id="436">436</span>
+<span id="437">437</span>
+<span id="438">438</span>
+<span id="439">439</span>
+<span id="440">440</span>
+<span id="441">441</span>
+<span id="442">442</span>
+<span id="443">443</span>
+<span id="444">444</span>
+<span id="445">445</span>
+<span id="446">446</span>
+<span id="447">447</span>
+<span id="448">448</span>
+<span id="449">449</span>
+<span id="450">450</span>
+<span id="451">451</span>
+<span id="452">452</span>
+<span id="453">453</span>
+<span id="454">454</span>
+<span id="455">455</span>
+<span id="456">456</span>
+<span id="457">457</span>
+<span id="458">458</span>
+<span id="459">459</span>
+<span id="460">460</span>
+<span id="461">461</span>
+<span id="462">462</span>
+<span id="463">463</span>
+<span id="464">464</span>
+<span id="465">465</span>
+<span id="466">466</span>
+<span id="467">467</span>
+<span id="468">468</span>
+<span id="469">469</span>
+<span id="470">470</span>
+<span id="471">471</span>
+<span id="472">472</span>
+<span id="473">473</span>
+<span id="474">474</span>
+<span id="475">475</span>
+<span id="476">476</span>
+<span id="477">477</span>
+<span id="478">478</span>
+<span id="479">479</span>
+<span id="480">480</span>
+<span id="481">481</span>
+<span id="482">482</span>
+<span id="483">483</span>
+<span id="484">484</span>
+<span id="485">485</span>
+<span id="486">486</span>
+<span id="487">487</span>
+<span id="488">488</span>
+<span id="489">489</span>
+<span id="490">490</span>
+<span id="491">491</span>
+<span id="492">492</span>
+<span id="493">493</span>
+<span id="494">494</span>
+<span id="495">495</span>
+<span id="496">496</span>
+<span id="497">497</span>
+<span id="498">498</span>
+<span id="499">499</span>
+<span id="500">500</span>
+<span id="501">501</span>
+<span id="502">502</span>
+<span id="503">503</span>
+<span id="504">504</span>
+<span id="505">505</span>
+<span id="506">506</span>
+<span id="507">507</span>
+<span id="508">508</span>
+<span id="509">509</span>
+<span id="510">510</span>
+<span id="511">511</span>
+<span id="512">512</span>
+<span id="513">513</span>
+<span id="514">514</span>
+<span id="515">515</span>
+<span id="516">516</span>
+<span id="517">517</span>
+<span id="518">518</span>
+<span id="519">519</span>
+<span id="520">520</span>
+<span id="521">521</span>
+<span id="522">522</span>
+<span id="523">523</span>
+<span id="524">524</span>
+<span id="525">525</span>
+<span id="526">526</span>
+<span id="527">527</span>
+<span id="528">528</span>
+<span id="529">529</span>
+<span id="530">530</span>
+<span id="531">531</span>
+<span id="532">532</span>
+<span id="533">533</span>
+<span id="534">534</span>
+<span id="535">535</span>
+<span id="536">536</span>
+<span id="537">537</span>
+<span id="538">538</span>
+<span id="539">539</span>
+<span id="540">540</span>
+<span id="541">541</span>
+<span id="542">542</span>
+<span id="543">543</span>
+<span id="544">544</span>
+<span id="545">545</span>
+<span id="546">546</span>
+<span id="547">547</span>
+<span id="548">548</span>
+<span id="549">549</span>
+<span id="550">550</span>
+<span id="551">551</span>
+<span id="552">552</span>
+<span id="553">553</span>
+<span id="554">554</span>
+<span id="555">555</span>
+<span id="556">556</span>
+<span id="557">557</span>
+<span id="558">558</span>
+<span id="559">559</span>
+<span id="560">560</span>
+<span id="561">561</span>
+<span id="562">562</span>
+<span id="563">563</span>
+<span id="564">564</span>
+<span id="565">565</span>
+<span id="566">566</span>
+<span id="567">567</span>
+<span id="568">568</span>
+<span id="569">569</span>
+<span id="570">570</span>
+<span id="571">571</span>
+<span id="572">572</span>
+<span id="573">573</span>
+<span id="574">574</span>
+<span id="575">575</span>
+<span id="576">576</span>
+<span id="577">577</span>
+<span id="578">578</span>
+<span id="579">579</span>
+<span id="580">580</span>
+<span id="581">581</span>
+<span id="582">582</span>
+<span id="583">583</span>
+<span id="584">584</span>
+<span id="585">585</span>
+<span id="586">586</span>
+<span id="587">587</span>
+<span id="588">588</span>
+<span id="589">589</span>
+<span id="590">590</span>
+<span id="591">591</span>
+<span id="592">592</span>
+<span id="593">593</span>
+<span id="594">594</span>
+<span id="595">595</span>
+<span id="596">596</span>
+<span id="597">597</span>
+<span id="598">598</span>
+<span id="599">599</span>
+<span id="600">600</span>
+<span id="601">601</span>
+<span id="602">602</span>
+<span id="603">603</span>
+<span id="604">604</span>
+<span id="605">605</span>
+<span id="606">606</span>
+<span id="607">607</span>
+<span id="608">608</span>
+<span id="609">609</span>
+<span id="610">610</span>
+<span id="611">611</span>
+<span id="612">612</span>
+<span id="613">613</span>
+<span id="614">614</span>
+<span id="615">615</span>
+<span id="616">616</span>
+<span id="617">617</span>
+<span id="618">618</span>
+<span id="619">619</span>
+<span id="620">620</span>
+<span id="621">621</span>
+<span id="622">622</span>
+<span id="623">623</span>
+<span id="624">624</span>
+<span id="625">625</span>
+<span id="626">626</span>
+<span id="627">627</span>
+<span id="628">628</span>
+<span id="629">629</span>
+<span id="630">630</span>
+<span id="631">631</span>
+<span id="632">632</span>
+<span id="633">633</span>
+<span id="634">634</span>
+<span id="635">635</span>
+<span id="636">636</span>
+<span id="637">637</span>
+<span id="638">638</span>
+<span id="639">639</span>
+<span id="640">640</span>
+<span id="641">641</span>
+<span id="642">642</span>
+<span id="643">643</span>
+<span id="644">644</span>
+<span id="645">645</span>
+<span id="646">646</span>
+<span id="647">647</span>
+<span id="648">648</span>
+<span id="649">649</span>
+<span id="650">650</span>
+<span id="651">651</span>
+<span id="652">652</span>
+<span id="653">653</span>
+<span id="654">654</span>
+<span id="655">655</span>
+<span id="656">656</span>
+<span id="657">657</span>
+<span id="658">658</span>
+<span id="659">659</span>
+<span id="660">660</span>
+<span id="661">661</span>
+<span id="662">662</span>
+<span id="663">663</span>
+<span id="664">664</span>
+<span id="665">665</span>
+<span id="666">666</span>
+<span id="667">667</span>
+<span id="668">668</span>
+<span id="669">669</span>
+<span id="670">670</span>
+<span id="671">671</span>
+<span id="672">672</span>
+<span id="673">673</span>
+<span id="674">674</span>
+<span id="675">675</span>
+<span id="676">676</span>
+<span id="677">677</span>
+<span id="678">678</span>
+<span id="679">679</span>
+<span id="680">680</span>
+<span id="681">681</span>
+<span id="682">682</span>
+<span id="683">683</span>
+<span id="684">684</span>
+<span id="685">685</span>
+<span id="686">686</span>
+<span id="687">687</span>
+<span id="688">688</span>
+<span id="689">689</span>
+<span id="690">690</span>
+<span id="691">691</span>
+<span id="692">692</span>
+<span id="693">693</span>
+<span id="694">694</span>
+<span id="695">695</span>
+<span id="696">696</span>
+<span id="697">697</span>
+<span id="698">698</span>
+<span id="699">699</span>
+<span id="700">700</span>
+<span id="701">701</span>
+<span id="702">702</span>
+<span id="703">703</span>
+<span id="704">704</span>
+<span id="705">705</span>
+<span id="706">706</span>
+<span id="707">707</span>
+<span id="708">708</span>
+<span id="709">709</span>
+<span id="710">710</span>
+<span id="711">711</span>
+<span id="712">712</span>
+<span id="713">713</span>
+<span id="714">714</span>
+<span id="715">715</span>
+<span id="716">716</span>
+<span id="717">717</span>
+<span id="718">718</span>
+<span id="719">719</span>
+<span id="720">720</span>
+<span id="721">721</span>
+<span id="722">722</span>
+<span id="723">723</span>
+<span id="724">724</span>
+<span id="725">725</span>
+<span id="726">726</span>
+<span id="727">727</span>
+<span id="728">728</span>
+<span id="729">729</span>
+<span id="730">730</span>
+<span id="731">731</span>
+<span id="732">732</span>
+<span id="733">733</span>
+<span id="734">734</span>
+<span id="735">735</span>
+<span id="736">736</span>
+<span id="737">737</span>
+<span id="738">738</span>
+<span id="739">739</span>
+<span id="740">740</span>
+<span id="741">741</span>
+<span id="742">742</span>
+<span id="743">743</span>
+<span id="744">744</span>
+<span id="745">745</span>
+<span id="746">746</span>
+<span id="747">747</span>
+<span id="748">748</span>
+<span id="749">749</span>
+<span id="750">750</span>
+<span id="751">751</span>
+<span id="752">752</span>
+<span id="753">753</span>
+<span id="754">754</span>
+<span id="755">755</span>
+<span id="756">756</span>
+<span id="757">757</span>
+<span id="758">758</span>
+<span id="759">759</span>
+<span id="760">760</span>
+<span id="761">761</span>
+<span id="762">762</span>
+<span id="763">763</span>
+<span id="764">764</span>
+<span id="765">765</span>
+<span id="766">766</span>
+<span id="767">767</span>
+<span id="768">768</span>
+<span id="769">769</span>
+<span id="770">770</span>
+<span id="771">771</span>
+<span id="772">772</span>
+<span id="773">773</span>
+<span id="774">774</span>
+<span id="775">775</span>
+<span id="776">776</span>
+<span id="777">777</span>
+<span id="778">778</span>
+<span id="779">779</span>
+<span id="780">780</span>
+<span id="781">781</span>
+<span id="782">782</span>
+<span id="783">783</span>
+<span id="784">784</span>
+<span id="785">785</span>
+<span id="786">786</span>
+<span id="787">787</span>
+<span id="788">788</span>
+<span id="789">789</span>
+<span id="790">790</span>
+<span id="791">791</span>
+<span id="792">792</span>
+<span id="793">793</span>
+<span id="794">794</span>
+<span id="795">795</span>
+<span id="796">796</span>
+<span id="797">797</span>
+<span id="798">798</span>
+<span id="799">799</span>
+<span id="800">800</span>
+<span id="801">801</span>
+<span id="802">802</span>
+<span id="803">803</span>
+<span id="804">804</span>
+<span id="805">805</span>
+<span id="806">806</span>
+<span id="807">807</span>
+<span id="808">808</span>
+<span id="809">809</span>
+<span id="810">810</span>
+<span id="811">811</span>
+<span id="812">812</span>
+<span id="813">813</span>
+<span id="814">814</span>
+<span id="815">815</span>
+<span id="816">816</span>
+<span id="817">817</span>
+<span id="818">818</span>
+<span id="819">819</span>
+<span id="820">820</span>
+<span id="821">821</span>
+<span id="822">822</span>
+<span id="823">823</span>
+<span id="824">824</span>
+<span id="825">825</span>
+<span id="826">826</span>
+<span id="827">827</span>
+<span id="828">828</span>
+<span id="829">829</span>
+<span id="830">830</span>
+<span id="831">831</span>
+<span id="832">832</span>
+<span id="833">833</span>
+<span id="834">834</span>
+<span id="835">835</span>
+<span id="836">836</span>
+<span id="837">837</span>
+<span id="838">838</span>
+<span id="839">839</span>
+<span id="840">840</span>
+<span id="841">841</span>
+<span id="842">842</span>
+<span id="843">843</span>
+<span id="844">844</span>
+<span id="845">845</span>
+<span id="846">846</span>
+<span id="847">847</span>
+<span id="848">848</span>
+<span id="849">849</span>
+<span id="850">850</span>
+<span id="851">851</span>
+<span id="852">852</span>
+<span id="853">853</span>
+<span id="854">854</span>
+<span id="855">855</span>
+<span id="856">856</span>
+<span id="857">857</span>
+<span id="858">858</span>
+<span id="859">859</span>
+<span id="860">860</span>
+<span id="861">861</span>
+<span id="862">862</span>
+<span id="863">863</span>
+<span id="864">864</span>
+<span id="865">865</span>
+<span id="866">866</span>
+<span id="867">867</span>
+<span id="868">868</span>
+<span id="869">869</span>
+<span id="870">870</span>
+<span id="871">871</span>
+<span id="872">872</span>
+<span id="873">873</span>
+<span id="874">874</span>
+<span id="875">875</span>
+<span id="876">876</span>
+<span id="877">877</span>
+<span id="878">878</span>
+<span id="879">879</span>
+<span id="880">880</span>
+<span id="881">881</span>
+<span id="882">882</span>
+<span id="883">883</span>
+<span id="884">884</span>
+<span id="885">885</span>
+<span id="886">886</span>
+<span id="887">887</span>
+<span id="888">888</span>
+<span id="889">889</span>
+<span id="890">890</span>
+<span id="891">891</span>
+<span id="892">892</span>
+<span id="893">893</span>
+<span id="894">894</span>
+<span id="895">895</span>
+<span id="896">896</span>
+<span id="897">897</span>
+<span id="898">898</span>
+<span id="899">899</span>
+<span id="900">900</span>
+<span id="901">901</span>
+<span id="902">902</span>
+<span id="903">903</span>
+<span id="904">904</span>
+<span id="905">905</span>
+<span id="906">906</span>
+<span id="907">907</span>
+<span id="908">908</span>
+<span id="909">909</span>
+<span id="910">910</span>
+<span id="911">911</span>
+<span id="912">912</span>
+<span id="913">913</span>
+<span id="914">914</span>
+<span id="915">915</span>
+<span id="916">916</span>
+<span id="917">917</span>
+<span id="918">918</span>
+<span id="919">919</span>
+<span id="920">920</span>
+<span id="921">921</span>
+<span id="922">922</span>
+<span id="923">923</span>
+<span id="924">924</span>
+<span id="925">925</span>
+<span id="926">926</span>
+<span id="927">927</span>
+<span id="928">928</span>
+<span id="929">929</span>
+<span id="930">930</span>
+<span id="931">931</span>
+<span id="932">932</span>
+<span id="933">933</span>
+<span id="934">934</span>
+<span id="935">935</span>
+<span id="936">936</span>
+<span id="937">937</span>
+<span id="938">938</span>
+<span id="939">939</span>
+<span id="940">940</span>
+<span id="941">941</span>
+<span id="942">942</span>
+<span id="943">943</span>
+<span id="944">944</span>
+<span id="945">945</span>
+<span id="946">946</span>
+<span id="947">947</span>
+<span id="948">948</span>
+<span id="949">949</span>
+<span id="950">950</span>
+<span id="951">951</span>
+<span id="952">952</span>
+<span id="953">953</span>
+<span id="954">954</span>
+<span id="955">955</span>
+<span id="956">956</span>
+<span id="957">957</span>
+<span id="958">958</span>
+<span id="959">959</span>
+<span id="960">960</span>
+<span id="961">961</span>
+<span id="962">962</span>
+<span id="963">963</span>
+<span id="964">964</span>
+<span id="965">965</span>
+<span id="966">966</span>
+<span id="967">967</span>
+<span id="968">968</span>
+<span id="969">969</span>
+<span id="970">970</span>
+<span id="971">971</span>
+<span id="972">972</span>
+<span id="973">973</span>
+<span id="974">974</span>
+<span id="975">975</span>
+<span id="976">976</span>
+<span id="977">977</span>
+<span id="978">978</span>
+<span id="979">979</span>
+<span id="980">980</span>
+<span id="981">981</span>
+<span id="982">982</span>
+<span id="983">983</span>
+<span id="984">984</span>
+<span id="985">985</span>
+<span id="986">986</span>
+<span id="987">987</span>
+<span id="988">988</span>
+<span id="989">989</span>
+<span id="990">990</span>
+<span id="991">991</span>
+<span id="992">992</span>
+<span id="993">993</span>
+<span id="994">994</span>
+<span id="995">995</span>
+<span id="996">996</span>
+<span id="997">997</span>
+<span id="998">998</span>
+<span id="999">999</span>
+<span id="1000">1000</span>
+<span id="1001">1001</span>
+<span id="1002">1002</span>
+<span id="1003">1003</span>
+<span id="1004">1004</span>
+<span id="1005">1005</span>
+<span id="1006">1006</span>
+<span id="1007">1007</span>
+<span id="1008">1008</span>
+<span id="1009">1009</span>
+<span id="1010">1010</span>
+<span id="1011">1011</span>
+<span id="1012">1012</span>
+<span id="1013">1013</span>
+<span id="1014">1014</span>
+<span id="1015">1015</span>
+<span id="1016">1016</span>
+<span id="1017">1017</span>
+<span id="1018">1018</span>
+<span id="1019">1019</span>
+<span id="1020">1020</span>
+<span id="1021">1021</span>
+<span id="1022">1022</span>
+<span id="1023">1023</span>
+<span id="1024">1024</span>
+<span id="1025">1025</span>
+<span id="1026">1026</span>
+<span id="1027">1027</span>
+<span id="1028">1028</span>
+<span id="1029">1029</span>
+</pre><pre class="rust"><code><span class="kw">use crate</span>::{
+    halo2_proofs::{circuit::Value, plonk::ConstraintSystem},
+    keccak::{KeccakChip, KeccakConfig},
+    rlp::{
+        max_rlp_len_len,
+        rlc::{
+            rlc_constrain_equal, rlc_is_equal, rlc_select, rlc_select_from_idx, RlcTrace, RlcVarLen,
+        },
+        RlpChip, RlpConfig, RlpFieldTrace,
+    },
+    rlp::{rlc::RlcChip, RlpArrayTraceWitness},
+    util::EthConfigParams,
+    Field,
+};
+<span class="kw">use </span>ethers_core::{types::H256, utils::hex::FromHex};
+<span class="kw">use </span>halo2_base::{
+    gates::{flex_gate::FlexGateConfig, range::RangeConfig, GateInstructions, RangeInstructions},
+    utils::{bit_length, ScalarField},
+    AssignedValue, Context,
+    QuantumCell::{Constant, Existing, Witness},
+};
+<span class="kw">use </span>itertools::Itertools;
+<span class="kw">use </span>lazy_static::lazy_static;
+<span class="kw">use </span>rlp::Rlp;
+<span class="kw">use </span>std::{cmp::max, env::set_var, iter::once};
+
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests;
+
+<span class="attribute">#[derive(Clone, Debug)]
+</span><span class="kw">pub struct </span>LeafTrace&lt;<span class="lifetime">&#39;v</span>, F: Field&gt; {
+    key_path: RlpFieldTrace&lt;<span class="lifetime">&#39;v</span>, F&gt;,
+    value: RlpFieldTrace&lt;<span class="lifetime">&#39;v</span>, F&gt;,
+    leaf_hash_rlc: RlcVarLen&lt;<span class="lifetime">&#39;v</span>, F&gt;,
+}
+
+<span class="attribute">#[derive(Clone, Debug)]
+</span><span class="kw">pub struct </span>LeafTraceWitness&lt;<span class="lifetime">&#39;v</span>, F: Field&gt; {
+    <span class="kw">pub </span>rlp_witness: RlpArrayTraceWitness&lt;<span class="lifetime">&#39;v</span>, F&gt;,
+    <span class="kw">pub </span>leaf_hash_query_idx: usize,
+    <span class="kw">pub </span>max_leaf_bytes: usize,
+}
+
+<span class="attribute">#[derive(Clone, Debug)]
+</span><span class="kw">pub struct </span>ExtensionTrace&lt;<span class="lifetime">&#39;v</span>, F: Field&gt; {
+    key_path: RlpFieldTrace&lt;<span class="lifetime">&#39;v</span>, F&gt;,
+    node_ref: RlpFieldTrace&lt;<span class="lifetime">&#39;v</span>, F&gt;,
+    ext_hash_rlc: RlcVarLen&lt;<span class="lifetime">&#39;v</span>, F&gt;,
+}
+
+<span class="attribute">#[derive(Clone, Debug)]
+</span><span class="kw">pub struct </span>ExtensionTraceWitness&lt;<span class="lifetime">&#39;v</span>, F: Field&gt; {
+    <span class="kw">pub </span>rlp_witness: RlpArrayTraceWitness&lt;<span class="lifetime">&#39;v</span>, F&gt;,
+    <span class="kw">pub </span>ext_hash_query_idx: usize,
+    <span class="kw">pub </span>max_ext_bytes: usize,
+}
+
+<span class="attribute">#[derive(Clone, Debug)]
+</span><span class="kw">pub struct </span>BranchTrace&lt;<span class="lifetime">&#39;v</span>, F: Field&gt; {
+    node_refs: [RlpFieldTrace&lt;<span class="lifetime">&#39;v</span>, F&gt;; <span class="number">17</span>],
+    branch_hash_rlc: RlcVarLen&lt;<span class="lifetime">&#39;v</span>, F&gt;,
+}
+
+<span class="attribute">#[derive(Clone, Debug)]
+</span><span class="kw">pub struct </span>BranchTraceWitness&lt;<span class="lifetime">&#39;v</span>, F: Field&gt; {
+    <span class="kw">pub </span>rlp_witness: RlpArrayTraceWitness&lt;<span class="lifetime">&#39;v</span>, F&gt;,
+    <span class="kw">pub </span>branch_hash_query_idx: usize,
+    <span class="kw">pub </span>max_branch_bytes: usize,
+}
+
+<span class="comment">// helper types for readability
+</span><span class="kw">pub type </span>AssignedBytes&lt;<span class="lifetime">&#39;v</span>, F&gt; = Vec&lt;AssignedValue&lt;<span class="lifetime">&#39;v</span>, F&gt;&gt;;
+<span class="kw">pub type </span>AssignedNibbles&lt;<span class="lifetime">&#39;v</span>, F&gt; = Vec&lt;AssignedValue&lt;<span class="lifetime">&#39;v</span>, F&gt;&gt;;
+
+<span class="attribute">#[derive(Clone, Debug)]
+</span><span class="kw">pub struct </span>MPTNode&lt;<span class="lifetime">&#39;v</span>, F: Field&gt; {
+    <span class="kw">pub </span>rlp_bytes: AssignedBytes&lt;<span class="lifetime">&#39;v</span>, F&gt;,
+    <span class="kw">pub </span>node_type: AssignedValue&lt;<span class="lifetime">&#39;v</span>, F&gt;, <span class="comment">// index 0 = root; 0 = branch, 1 = extension
+</span>}
+
+<span class="attribute">#[derive(Clone, Debug)]
+</span><span class="doccomment">/// A fragment of the key (bytes), stored as nibbles before hex-prefix encoding
+</span><span class="kw">pub struct </span>MPTKeyFragment&lt;<span class="lifetime">&#39;v</span>, F: Field&gt; {
+    <span class="kw">pub </span>nibbles: AssignedNibbles&lt;<span class="lifetime">&#39;v</span>, F&gt;,
+    <span class="kw">pub </span>is_odd: AssignedValue&lt;<span class="lifetime">&#39;v</span>, F&gt;,
+    <span class="comment">// hex_len = 2 * byte_len + is_odd - 2
+    // if nibble for branch: byte_len = is_odd = 1
+    </span><span class="doccomment">/// The byte length of the hex-prefix encoded fragment
+    </span><span class="kw">pub </span>byte_len: AssignedValue&lt;<span class="lifetime">&#39;v</span>, F&gt;,
+}
+
+<span class="attribute">#[derive(Clone, Debug)]
+</span><span class="kw">pub struct </span>MPTFixedKeyProof&lt;<span class="lifetime">&#39;v</span>, F: Field&gt; {
+    <span class="comment">// claim specification: (key, value)
+    </span><span class="kw">pub </span>key_bytes: AssignedBytes&lt;<span class="lifetime">&#39;v</span>, F&gt;,
+    <span class="kw">pub </span>value_bytes: AssignedBytes&lt;<span class="lifetime">&#39;v</span>, F&gt;,
+    <span class="kw">pub </span>value_byte_len: AssignedValue&lt;<span class="lifetime">&#39;v</span>, F&gt;,
+    <span class="kw">pub </span>root_hash_bytes: AssignedBytes&lt;<span class="lifetime">&#39;v</span>, F&gt;,
+
+    <span class="comment">// proof specification
+    </span><span class="kw">pub </span>depth: AssignedValue&lt;<span class="lifetime">&#39;v</span>, F&gt;,
+    <span class="doccomment">/// RLP encoding of the final leaf node
+    </span><span class="kw">pub </span>leaf_bytes: AssignedBytes&lt;<span class="lifetime">&#39;v</span>, F&gt;,
+    <span class="kw">pub </span>nodes: Vec&lt;MPTNode&lt;<span class="lifetime">&#39;v</span>, F&gt;&gt;,
+    <span class="kw">pub </span>key_frag: Vec&lt;MPTKeyFragment&lt;<span class="lifetime">&#39;v</span>, F&gt;&gt;,
+
+    <span class="kw">pub </span>key_byte_len: usize,
+    <span class="kw">pub </span>value_max_byte_len: usize,
+    <span class="kw">pub </span>max_depth: usize,
+}
+
+<span class="attribute">#[derive(Clone, Debug)]
+</span><span class="kw">pub struct </span>MPTFixedKeyProofWitness&lt;<span class="lifetime">&#39;v</span>, F: Field&gt; {
+    <span class="kw">pub </span>proof: MPTFixedKeyProof&lt;<span class="lifetime">&#39;v</span>, F&gt;,
+    <span class="kw">pub </span>leaf_parsed: LeafTraceWitness&lt;<span class="lifetime">&#39;v</span>, F&gt;,
+    <span class="kw">pub </span>exts_parsed: Vec&lt;ExtensionTraceWitness&lt;<span class="lifetime">&#39;v</span>, F&gt;&gt;,
+    <span class="kw">pub </span>branches_parsed: Vec&lt;BranchTraceWitness&lt;<span class="lifetime">&#39;v</span>, F&gt;&gt;,
+    <span class="doccomment">/// the hex-prefix encoded path for (potential) extension nodes
+    </span><span class="kw">pub </span>key_frag_ext_bytes: Vec&lt;Vec&lt;AssignedValue&lt;<span class="lifetime">&#39;v</span>, F&gt;&gt;&gt;,
+    <span class="doccomment">/// the hex-prefix encoded path for (potential) leaf nodes
+    </span><span class="kw">pub </span>key_frag_leaf_bytes: Vec&lt;Vec&lt;AssignedValue&lt;<span class="lifetime">&#39;v</span>, F&gt;&gt;&gt;,
+    <span class="kw">pub </span>frag_lens: Vec&lt;AssignedValue&lt;<span class="lifetime">&#39;v</span>, F&gt;&gt;,
+    <span class="kw">pub </span>key_hexs: AssignedNibbles&lt;<span class="lifetime">&#39;v</span>, F&gt;,
+}
+
+<span class="attribute">#[allow(dead_code)]
+#[derive(Clone, Debug)]
+</span><span class="kw">pub struct </span>MPTVarKeyProof&lt;<span class="lifetime">&#39;v</span>, F: Field&gt; {
+    <span class="comment">// claim specification
+    </span>key_bytes: AssignedBytes&lt;<span class="lifetime">&#39;v</span>, F&gt;,
+    key_byte_len: AssignedValue&lt;<span class="lifetime">&#39;v</span>, F&gt;,
+    value_bytes: AssignedBytes&lt;<span class="lifetime">&#39;v</span>, F&gt;,
+    value_byte_len: AssignedValue&lt;<span class="lifetime">&#39;v</span>, F&gt;,
+    root_hash_bytes: AssignedBytes&lt;<span class="lifetime">&#39;v</span>, F&gt;,
+
+    <span class="comment">// proof specification
+    </span>leaf_bytes: AssignedBytes&lt;<span class="lifetime">&#39;v</span>, F&gt;,
+    proof_nodes: Vec&lt;AssignedBytes&lt;<span class="lifetime">&#39;v</span>, F&gt;&gt;,
+    node_types: Vec&lt;AssignedValue&lt;<span class="lifetime">&#39;v</span>, F&gt;&gt;, <span class="comment">// index 0 = root; 0 = branch, 1 = extension
+    </span>depth: AssignedValue&lt;<span class="lifetime">&#39;v</span>, F&gt;,
+
+    key_frag_hexs: Vec&lt;AssignedNibbles&lt;<span class="lifetime">&#39;v</span>, F&gt;&gt;,
+    <span class="comment">// hex_len = 2 * byte_len + is_odd - 2
+    </span>key_frag_is_odd: Vec&lt;AssignedValue&lt;<span class="lifetime">&#39;v</span>, F&gt;&gt;,
+    key_frag_byte_len: Vec&lt;AssignedValue&lt;<span class="lifetime">&#39;v</span>, F&gt;&gt;,
+
+    key_max_byte_len: usize,
+    value_max_byte_len: usize,
+    max_depth: usize,
+}
+
+<span class="kw">pub fn </span>max_leaf_lens(max_key_bytes: usize, max_value_bytes: usize) -&gt; (Vec&lt;usize&gt;, usize) {
+    <span class="kw">let </span>max_encoded_path_bytes = max_key_bytes + <span class="number">1</span>;
+    <span class="kw">let </span>max_encoded_path_rlp_bytes =
+        <span class="number">1 </span>+ max_rlp_len_len(max_encoded_path_bytes) + max_encoded_path_bytes;
+    <span class="kw">let </span>max_value_rlp_bytes = <span class="number">1 </span>+ max_rlp_len_len(max_value_bytes) + max_value_bytes;
+    <span class="kw">let </span>max_field_bytes = <span class="macro">vec!</span>[max_encoded_path_rlp_bytes, max_value_rlp_bytes];
+    <span class="kw">let </span>max_leaf_bytes: usize =
+        <span class="number">1 </span>+ max_rlp_len_len(max_field_bytes.iter().sum()) + max_field_bytes.iter().sum::&lt;usize&gt;();
+    (max_field_bytes, max_leaf_bytes)
+}
+
+<span class="kw">pub fn </span>max_ext_lens(max_key_bytes: usize) -&gt; (Vec&lt;usize&gt;, usize) {
+    <span class="kw">let </span>max_node_ref_bytes = <span class="number">32</span>;
+    <span class="kw">let </span>max_encoded_path_bytes = max_key_bytes + <span class="number">1</span>;
+    <span class="kw">let </span>max_encoded_path_rlp_bytes =
+        <span class="number">1 </span>+ max_rlp_len_len(max_encoded_path_bytes) + max_encoded_path_bytes;
+    <span class="kw">let </span>max_node_ref_rlp_bytes = <span class="number">1 </span>+ max_rlp_len_len(max_node_ref_bytes) + max_node_ref_bytes;
+    <span class="kw">let </span>max_field_bytes = <span class="macro">vec!</span>[max_encoded_path_rlp_bytes, max_node_ref_rlp_bytes];
+    <span class="kw">let </span>max_ext_bytes: usize =
+        <span class="number">1 </span>+ max_rlp_len_len(max_field_bytes.iter().sum()) + max_field_bytes.iter().sum::&lt;usize&gt;();
+    (max_field_bytes, max_ext_bytes)
+}
+
+<span class="kw">pub fn </span>max_branch_lens() -&gt; (Vec&lt;usize&gt;, usize) {
+    <span class="kw">let </span>max_node_ref_bytes = <span class="number">32</span>;
+    <span class="kw">let </span>max_node_ref_rlp_bytes = <span class="number">1 </span>+ max_rlp_len_len(max_node_ref_bytes) + max_node_ref_bytes;
+    <span class="kw">let </span><span class="kw-2">mut </span>max_field_bytes = <span class="macro">vec!</span>[max_node_ref_rlp_bytes; <span class="number">16</span>];
+    max_field_bytes.push(<span class="number">2</span>);
+    <span class="kw">let </span>max_branch_bytes: usize =
+        <span class="number">1 </span>+ max_rlp_len_len(max_field_bytes.iter().sum()) + max_field_bytes.iter().sum::&lt;usize&gt;();
+    (max_field_bytes, max_branch_bytes)
+}
+
+<span class="macro">lazy_static! </span>{
+    <span class="kw">pub static </span><span class="kw-2">ref </span>MAX_BRANCH_LENS: (Vec&lt;usize&gt;, usize) = max_branch_lens();
+}
+
+<span class="attribute">#[derive(Clone, Debug)]
+</span><span class="kw">pub struct </span>MPTConfig&lt;F: Field&gt; {
+    <span class="kw">pub </span>rlp: RlpConfig&lt;F&gt;,
+    <span class="kw">pub </span>keccak: KeccakConfig&lt;F&gt;,
+}
+
+<span class="kw">impl</span>&lt;F: Field&gt; MPTConfig&lt;F&gt; {
+    <span class="kw">pub fn </span>configure(
+        meta: <span class="kw-2">&amp;mut </span>ConstraintSystem&lt;F&gt;,
+        params: EthConfigParams,
+        context_id: usize,
+    ) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>degree = params.degree;
+        <span class="kw">let </span><span class="kw-2">mut </span>rlp = RlpConfig::configure(
+            meta,
+            params.num_rlc_columns,
+            <span class="kw-2">&amp;</span>params.num_range_advice,
+            <span class="kw-2">&amp;</span>params.num_lookup_advice,
+            params.num_fixed,
+            <span class="number">8</span>, <span class="comment">// always want 8 to range check bytes
+            </span>context_id,
+            degree <span class="kw">as </span>usize,
+        );
+        set_var(<span class="string">&quot;KECCAK_DEGREE&quot;</span>, degree.to_string());
+        set_var(<span class="string">&quot;KECCAK_ROWS&quot;</span>, params.keccak_rows_per_round.to_string());
+        set_var(<span class="string">&quot;UNUSABLE_ROWS&quot;</span>, params.unusable_rows.to_string());
+        <span class="kw">let </span>keccak = KeccakConfig::new(meta, rlp.rlc.gamma);
+        <span class="attribute">#[cfg(feature = <span class="string">&quot;display&quot;</span>)]
+        </span><span class="macro">println!</span>(<span class="string">&quot;Unusable rows: {}&quot;</span>, meta.minimum_rows());
+        rlp.range.gate.max_rows = (<span class="number">1 </span>&lt;&lt; degree) - meta.minimum_rows();
+        <span class="self">Self </span>{ rlp, keccak }
+    }
+}
+
+<span class="attribute">#[derive(Clone, Debug)]
+</span><span class="kw">pub struct </span>MPTChip&lt;<span class="lifetime">&#39;v</span>, F: Field&gt; {
+    <span class="kw">pub </span>rlp: RlpChip&lt;<span class="lifetime">&#39;v</span>, F&gt;,
+    <span class="kw">pub </span>keccak: KeccakChip&lt;<span class="lifetime">&#39;v</span>, F&gt;,
+}
+
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;v</span>, F: Field&gt; MPTChip&lt;<span class="lifetime">&#39;v</span>, F&gt; {
+    <span class="kw">pub fn </span>new(config: MPTConfig&lt;F&gt;, gamma: Value&lt;F&gt;) -&gt; MPTChip&lt;<span class="lifetime">&#39;v</span>, F&gt; {
+        <span class="self">Self </span>{ rlp: RlpChip::new(config.rlp, gamma), keccak: KeccakChip::new(config.keccak) }
+    }
+
+    <span class="kw">pub fn </span>gate(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>FlexGateConfig&lt;F&gt; {
+        <span class="self">self</span>.rlp.gate()
+    }
+
+    <span class="kw">pub fn </span>range(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>RangeConfig&lt;F&gt; {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.rlp.range
+    }
+
+    <span class="kw">pub fn </span>rlp(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>RlpChip&lt;<span class="lifetime">&#39;v</span>, F&gt; {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.rlp
+    }
+
+    <span class="kw">pub fn </span>keccak(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>KeccakChip&lt;<span class="lifetime">&#39;v</span>, F&gt; {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.keccak
+    }
+
+    <span class="kw">pub fn </span>rlc(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>RlcChip&lt;<span class="lifetime">&#39;v</span>, F&gt; {
+        <span class="self">self</span>.rlp.rlc()
+    }
+
+    <span class="kw">pub fn </span>get_challenge(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ctx: <span class="kw-2">&amp;mut </span>Context&lt;F&gt;) {
+        <span class="self">self</span>.rlp.get_challenge(ctx);
+    }
+
+    <span class="kw">fn </span>ext_max_byte_len(max_key_bytes: usize) -&gt; usize {
+        <span class="kw">let </span>max_node_ref_bytes = <span class="number">32</span>;
+        <span class="kw">let </span>max_encoded_path_bytes = max_key_bytes + <span class="number">1</span>;
+        <span class="kw">let </span>max_encoded_path_rlp_bytes =
+            <span class="number">1 </span>+ max_rlp_len_len(max_encoded_path_bytes) + max_encoded_path_bytes;
+        <span class="kw">let </span>max_node_ref_rlp_bytes = <span class="number">1 </span>+ max_rlp_len_len(max_node_ref_bytes) + max_node_ref_bytes;
+        <span class="kw">let </span>max_field_bytes = <span class="macro">vec!</span>[max_encoded_path_rlp_bytes, max_node_ref_rlp_bytes];
+        <span class="kw">let </span>max_ext_bytes: usize = <span class="number">1
+            </span>+ max_rlp_len_len(max_field_bytes.iter().sum())
+            + max_field_bytes.iter().sum::&lt;usize&gt;();
+        max_ext_bytes
+    }
+
+    <span class="kw">fn </span>branch_max_byte_len() -&gt; usize {
+        <span class="kw">let </span>max_node_ref_bytes = <span class="number">32</span>;
+        <span class="kw">let </span>max_node_ref_rlp_bytes = <span class="number">1 </span>+ max_rlp_len_len(max_node_ref_bytes) + max_node_ref_bytes;
+        <span class="kw">let </span><span class="kw-2">mut </span>max_field_bytes = <span class="macro">vec!</span>[max_node_ref_rlp_bytes; <span class="number">16</span>];
+        max_field_bytes.push(<span class="number">2</span>);
+        <span class="kw">let </span>max_branch_bytes: usize = <span class="number">1
+            </span>+ max_rlp_len_len(max_field_bytes.iter().sum())
+            + max_field_bytes.iter().sum::&lt;usize&gt;();
+        max_branch_bytes
+    }
+
+    <span class="comment">// When one node is referenced inside another node, what is included is H(rlp.encode(x)), where H(x) = keccak256(x) if len(x) &gt;= 32 else x and rlp.encode is the RLP encoding function.
+    </span><span class="kw">pub fn </span>mpt_hash_phase0(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        ctx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">&#39;v</span>, F&gt;,
+        bytes: AssignedBytes&lt;<span class="lifetime">&#39;v</span>, F&gt;,
+        len: AssignedValue&lt;<span class="lifetime">&#39;v</span>, F&gt;,
+    ) -&gt; usize {
+        <span class="macro">debug_assert_ne!</span>(bytes.len(), <span class="number">0</span>);
+        <span class="self">self</span>.keccak.keccak_var_len(ctx, <span class="kw-2">&amp;</span><span class="self">self</span>.rlp.range, bytes, <span class="prelude-val">None</span>, len, <span class="number">0usize</span>)
+    }
+
+    <span class="comment">// When one node is referenced inside another node, what is included is H(rlp.encode(x)), where H(x) = keccak256(x) if len(x) &gt;= 32 else x and rlp.encode is the RLP encoding function.
+    // We only return the RLC value of the MPT hash
+    </span><span class="kw">pub fn </span>mpt_hash_phase1(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        ctx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">&#39;v</span>, F&gt;,
+        hash_query_idx: usize,
+        max_len: usize,
+    ) -&gt; RlcVarLen&lt;<span class="lifetime">&#39;v</span>, F&gt; {
+        <span class="kw">let </span>keccak_query = <span class="kw-2">&amp;</span><span class="self">self</span>.keccak.var_len_rlcs[hash_query_idx];
+        <span class="kw">let </span>hash_rlc = <span class="kw-2">&amp;</span>keccak_query.<span class="number">1</span>.rlc_val;
+        <span class="kw">let </span>bytes = keccak_query.<span class="number">0</span>.values[..<span class="number">32</span>].to_vec();
+        <span class="kw">let </span>len = keccak_query.<span class="number">0</span>.len.clone();
+        <span class="kw">let </span>thirty_two = <span class="self">self</span>.gate().get_field_element(<span class="number">32</span>);
+        <span class="kw">let </span>is_short = <span class="self">self</span>.range().is_less_than(
+            ctx,
+            Existing(<span class="kw-2">&amp;</span>len),
+            Constant(thirty_two),
+            bit_length(max_len <span class="kw">as </span>u64),
+        );
+        <span class="kw">let </span>mpt_hash_len =
+            <span class="self">self</span>.gate().select(ctx, Existing(<span class="kw-2">&amp;</span>len), Constant(thirty_two), Existing(<span class="kw-2">&amp;</span>is_short));
+        <span class="kw">let </span>short_rlc = <span class="self">self</span>.rlc().compute_rlc(ctx, <span class="self">self</span>.gate(), bytes, len).rlc_val;
+        <span class="kw">let </span>mpt_hash_rlc =
+            <span class="self">self</span>.gate().select(ctx, Existing(<span class="kw-2">&amp;</span>short_rlc), Existing(hash_rlc), Existing(<span class="kw-2">&amp;</span>is_short));
+        RlcVarLen { rlc_val: mpt_hash_rlc, len: mpt_hash_len }
+    }
+
+    <span class="kw">pub fn </span>parse_leaf_phase0(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        ctx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">&#39;v</span>, F&gt;,
+        leaf_bytes: AssignedBytes&lt;<span class="lifetime">&#39;v</span>, F&gt;,
+        max_key_bytes: usize,
+        max_value_bytes: usize,
+    ) -&gt; LeafTraceWitness&lt;<span class="lifetime">&#39;v</span>, F&gt; {
+        <span class="kw">let </span>(max_field_bytes, max_leaf_bytes) = max_leaf_lens(max_key_bytes, max_value_bytes);
+        <span class="macro">debug_assert_eq!</span>(leaf_bytes.len(), max_leaf_bytes);
+
+        <span class="kw">let </span>rlp_witness =
+            <span class="self">self</span>.rlp.decompose_rlp_array_phase0(ctx, leaf_bytes, <span class="kw-2">&amp;</span>max_field_bytes, <span class="bool-val">false</span>);
+        <span class="comment">// TODO: remove unnecessary clones by using lifetimes better
+        </span><span class="kw">let </span>leaf_hash_query_idx =
+            <span class="self">self</span>.mpt_hash_phase0(ctx, rlp_witness.rlp_array.clone(), rlp_witness.rlp_len.clone());
+        LeafTraceWitness { rlp_witness, leaf_hash_query_idx, max_leaf_bytes }
+    }
+
+    <span class="kw">pub fn </span>parse_leaf_phase1(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        ctx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">&#39;v</span>, F&gt;,
+        witness: LeafTraceWitness&lt;<span class="lifetime">&#39;v</span>, F&gt;,
+    ) -&gt; LeafTrace&lt;<span class="lifetime">&#39;v</span>, F&gt; {
+        <span class="kw">let </span>rlp_trace = <span class="self">self</span>.rlp.decompose_rlp_array_phase1(ctx, witness.rlp_witness, <span class="bool-val">false</span>);
+        <span class="kw">let </span>[key_path, value]: [RlpFieldTrace&lt;F&gt;; <span class="number">2</span>] = rlp_trace.field_trace.try_into().unwrap();
+        <span class="kw">let </span>leaf_hash_rlc =
+            <span class="self">self</span>.mpt_hash_phase1(ctx, witness.leaf_hash_query_idx, witness.max_leaf_bytes);
+        LeafTrace { key_path, value, leaf_hash_rlc }
+    }
+
+    <span class="kw">pub fn </span>parse_ext_phase0(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        ctx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">&#39;v</span>, F&gt;,
+        ext_bytes: AssignedBytes&lt;<span class="lifetime">&#39;v</span>, F&gt;,
+        max_key_bytes: usize,
+    ) -&gt; ExtensionTraceWitness&lt;<span class="lifetime">&#39;v</span>, F&gt; {
+        <span class="kw">let </span>(max_field_bytes, max_ext_bytes) = max_ext_lens(max_key_bytes);
+        <span class="kw">let </span>max_branch_bytes = MAX_BRANCH_LENS.<span class="number">1</span>;
+        <span class="kw">let </span>max_ext_bytes = max(max_ext_bytes, max_branch_bytes);
+        <span class="macro">debug_assert_eq!</span>(ext_bytes.len(), max_ext_bytes);
+
+        <span class="kw">let </span>rlp_witness =
+            <span class="self">self</span>.rlp.decompose_rlp_array_phase0(ctx, ext_bytes, <span class="kw-2">&amp;</span>max_field_bytes, <span class="bool-val">false</span>);
+        <span class="comment">// TODO: remove unnecessary clones by using lifetimes better
+        </span><span class="kw">let </span>ext_hash_query_idx =
+            <span class="self">self</span>.mpt_hash_phase0(ctx, rlp_witness.rlp_array.clone(), rlp_witness.rlp_len.clone());
+        ExtensionTraceWitness { rlp_witness, ext_hash_query_idx, max_ext_bytes }
+    }
+
+    <span class="kw">pub fn </span>parse_ext_phase1(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        ctx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">&#39;v</span>, F&gt;,
+        witness: ExtensionTraceWitness&lt;<span class="lifetime">&#39;v</span>, F&gt;,
+    ) -&gt; ExtensionTrace&lt;<span class="lifetime">&#39;v</span>, F&gt; {
+        <span class="kw">let </span>rlp_trace = <span class="self">self</span>.rlp.decompose_rlp_array_phase1(ctx, witness.rlp_witness, <span class="bool-val">false</span>);
+        <span class="kw">let </span>[key_path, node_ref]: [RlpFieldTrace&lt;F&gt;; <span class="number">2</span>] = rlp_trace.field_trace.try_into().unwrap();
+        <span class="kw">let </span>ext_hash_rlc =
+            <span class="self">self</span>.mpt_hash_phase1(ctx, witness.ext_hash_query_idx, witness.max_ext_bytes);
+        ExtensionTrace { key_path, node_ref, ext_hash_rlc }
+    }
+
+    <span class="kw">pub fn </span>parse_nonterminal_branch_phase0(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        ctx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">&#39;v</span>, F&gt;,
+        branch_bytes: AssignedBytes&lt;<span class="lifetime">&#39;v</span>, F&gt;,
+    ) -&gt; BranchTraceWitness&lt;<span class="lifetime">&#39;v</span>, F&gt; {
+        <span class="kw">let </span>(max_field_bytes, max_branch_bytes) = max_branch_lens();
+        <span class="kw">let </span>(<span class="kw">_</span>, max_ext_bytes) = max_ext_lens(<span class="number">32</span>);
+        <span class="kw">let </span>max_branch_bytes = max(max_ext_bytes, max_branch_bytes);
+        <span class="macro">assert_eq!</span>(branch_bytes.len(), max_branch_bytes);
+
+        <span class="kw">let </span>rlp_witness =
+            <span class="self">self</span>.rlp.decompose_rlp_array_phase0(ctx, branch_bytes, <span class="kw-2">&amp;</span>max_field_bytes, <span class="bool-val">false</span>);
+        <span class="kw">let </span>branch_hash_query_idx =
+            <span class="self">self</span>.mpt_hash_phase0(ctx, rlp_witness.rlp_array.clone(), rlp_witness.rlp_len.clone());
+        BranchTraceWitness { rlp_witness, branch_hash_query_idx, max_branch_bytes }
+    }
+
+    <span class="kw">pub fn </span>parse_nonterminal_branch_phase1(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        ctx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">&#39;v</span>, F&gt;,
+        witness: BranchTraceWitness&lt;<span class="lifetime">&#39;v</span>, F&gt;,
+    ) -&gt; BranchTrace&lt;<span class="lifetime">&#39;v</span>, F&gt; {
+        <span class="kw">let </span>rlp_trace = <span class="self">self</span>.rlp.decompose_rlp_array_phase1(ctx, witness.rlp_witness, <span class="bool-val">false</span>);
+        <span class="kw">let </span>node_refs: [RlpFieldTrace&lt;F&gt;; <span class="number">17</span>] = rlp_trace.field_trace.try_into().unwrap();
+        <span class="kw">let </span>branch_hash_rlc =
+            <span class="self">self</span>.mpt_hash_phase1(ctx, witness.branch_hash_query_idx, witness.max_branch_bytes);
+        BranchTrace { node_refs, branch_hash_rlc }
+    }
+
+    <span class="kw">pub fn </span>compute_rlc_trace(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        ctx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">&#39;v</span>, F&gt;,
+        inputs: Vec&lt;AssignedValue&lt;<span class="lifetime">&#39;v</span>, F&gt;&gt;,
+        len: AssignedValue&lt;<span class="lifetime">&#39;v</span>, F&gt;,
+    ) -&gt; RlcTrace&lt;<span class="lifetime">&#39;v</span>, F&gt; {
+        <span class="self">self</span>.rlp.rlc.compute_rlc(ctx, <span class="self">self</span>.rlp.range.gate(), inputs, len)
+    }
+
+    <span class="kw">pub fn </span>parse_mpt_inclusion_fixed_key_phase0(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        ctx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">&#39;v</span>, F&gt;,
+        proof: MPTFixedKeyProof&lt;<span class="lifetime">&#39;v</span>, F&gt;,
+        key_byte_len: usize,
+        value_max_byte_len: usize,
+        max_depth: usize,
+    ) -&gt; MPTFixedKeyProofWitness&lt;<span class="lifetime">&#39;v</span>, F&gt; {
+        <span class="macro">debug_assert_eq!</span>(proof.key_byte_len, key_byte_len);
+        <span class="macro">debug_assert_eq!</span>(proof.value_max_byte_len, value_max_byte_len);
+        <span class="macro">debug_assert_eq!</span>(proof.max_depth, max_depth);
+        <span class="macro">debug_assert_eq!</span>(proof.nodes.len(), max_depth - <span class="number">1</span>);
+        <span class="macro">debug_assert_eq!</span>(proof.key_bytes.len(), key_byte_len);
+        <span class="macro">debug_assert_eq!</span>(proof.value_bytes.len(), value_max_byte_len);
+        <span class="macro">debug_assert_eq!</span>(proof.root_hash_bytes.len(), <span class="number">32</span>);
+
+        <span class="kw">let </span>ext_max_byte_len = <span class="self">Self</span>::ext_max_byte_len(key_byte_len);
+        <span class="kw">let </span>branch_max_byte_len = <span class="self">Self</span>::branch_max_byte_len();
+        <span class="kw">let </span>node_max_byte_len = max(ext_max_byte_len, branch_max_byte_len);
+
+        <span class="kw">let </span><span class="kw-2">mut </span>dummy_ext = DUMMY_EXT.clone();
+        dummy_ext.resize(node_max_byte_len, <span class="number">0u8</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>dummy_branch = DUMMY_BRANCH.clone();
+        dummy_branch.resize(node_max_byte_len, <span class="number">0u8</span>);
+        <span class="kw">let </span>dummy_ext: Vec&lt;<span class="kw">_</span>&gt; =
+            dummy_ext.into_iter().map(|b| Constant(F::from(b <span class="kw">as </span>u64))).collect();
+        <span class="kw">let </span>dummy_branch: Vec&lt;<span class="kw">_</span>&gt; =
+            dummy_branch.into_iter().map(|b| Constant(F::from(b <span class="kw">as </span>u64))).collect();
+
+        <span class="comment">/* Validate inputs, check that:
+         * all inputs are bytes
+         * node_types[idx] in {0, 1}
+         * key_frag_is_odd[idx] in {0, 1}
+         * key_frag_hexes are hexs
+         * 0 &lt; depth &lt;= max_depth
+         * 0 &lt;= value_byte_len &lt;= value_max_byte_len
+         * 0 &lt;= key_frag_byte_len[idx] &lt;= key_byte_len + 1
+         */
+        </span><span class="kw">for </span>byte <span class="kw">in </span>proof
+            .key_bytes
+            .iter()
+            .chain(proof.value_bytes.iter())
+            .chain(proof.root_hash_bytes.iter())
+            .chain(proof.leaf_bytes.iter())
+            .chain(proof.nodes.iter().flat_map(|node| node.rlp_bytes.iter()))
+        {
+            <span class="self">self</span>.range().range_check(ctx, byte, <span class="number">8</span>);
+        }
+        <span class="kw">for </span>bit <span class="kw">in </span>proof
+            .nodes
+            .iter()
+            .map(|node| <span class="kw-2">&amp;</span>node.node_type)
+            .chain(proof.key_frag.iter().map(|frag| <span class="kw-2">&amp;</span>frag.is_odd))
+        {
+            <span class="self">self</span>.gate().assert_bit(ctx, bit);
+        }
+        <span class="kw">for </span>nibble <span class="kw">in </span>proof.key_frag.iter().flat_map(|frag| frag.nibbles.iter()) {
+            <span class="self">self</span>.range().range_check(ctx, nibble, <span class="number">4</span>);
+        }
+        <span class="self">self</span>.range().check_less_than_safe(ctx, <span class="kw-2">&amp;</span>proof.depth, proof.max_depth <span class="kw">as </span>u64 + <span class="number">1</span>);
+        <span class="self">self</span>.range().check_less_than_safe(
+            ctx,
+            <span class="kw-2">&amp;</span>proof.value_byte_len,
+            proof.value_max_byte_len <span class="kw">as </span>u64 + <span class="number">1</span>,
+        );
+        <span class="kw">for </span>frag_len <span class="kw">in </span>proof.key_frag.iter().map(|frag| <span class="kw-2">&amp;</span>frag.byte_len) {
+            <span class="self">self</span>.range().check_less_than_safe(ctx, frag_len, proof.key_byte_len <span class="kw">as </span>u64 + <span class="number">2</span>);
+        }
+
+        <span class="comment">/* Parse RLP
+         * RLP Leaf      for leaf_bytes
+         * RLP Extension for select(dummy_extension[idx], nodes[idx], node_types[idx])
+         * RLP Branch    for select(nodes[idx], dummy_branch[idx], node_types[idx])
+         */
+        </span><span class="kw">let </span>leaf_parsed =
+            <span class="self">self</span>.parse_leaf_phase0(ctx, proof.leaf_bytes.clone(), key_byte_len, value_max_byte_len);
+        <span class="kw">let </span><span class="kw-2">mut </span>exts_parsed = Vec::with_capacity(max_depth - <span class="number">1</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>branches_parsed = Vec::with_capacity(max_depth - <span class="number">1</span>);
+        <span class="kw">for </span>node <span class="kw">in </span>proof.nodes.iter() {
+            <span class="macro">debug_assert_eq!</span>(node.rlp_bytes.len(), node_max_byte_len);
+            <span class="kw">let </span>(ext_in, branch_in): (Vec&lt;<span class="kw">_</span>&gt;, Vec&lt;<span class="kw">_</span>&gt;) = node
+                .rlp_bytes
+                .iter()
+                .zip(dummy_ext.iter().cloned())
+                .zip(dummy_branch.iter().cloned())
+                .map(|((node_byte, dummy_ext_byte), dummy_branch_byte)| {
+                    (
+                        <span class="self">self</span>.gate().select(
+                            ctx,
+                            Existing(node_byte),
+                            dummy_ext_byte,
+                            Existing(<span class="kw-2">&amp;</span>node.node_type),
+                        ),
+                        <span class="self">self</span>.gate().select(
+                            ctx,
+                            dummy_branch_byte,
+                            Existing(node_byte),
+                            Existing(<span class="kw-2">&amp;</span>node.node_type),
+                        ),
+                    )
+                })
+                .unzip();
+
+            <span class="kw">let </span>ext_parsed = <span class="self">self</span>.parse_ext_phase0(ctx, ext_in, key_byte_len);
+            exts_parsed.push(ext_parsed);
+
+            <span class="kw">let </span>branch_parsed = <span class="self">self</span>.parse_nonterminal_branch_phase0(ctx, branch_in);
+            branches_parsed.push(branch_parsed);
+        }
+
+        <span class="comment">// Check key fragment and prefix consistency
+        </span><span class="kw">let </span><span class="kw-2">mut </span>key_frag_ext_bytes = Vec::with_capacity(max_depth - <span class="number">1</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>key_frag_leaf_bytes = Vec::with_capacity(max_depth);
+        <span class="kw">let </span><span class="kw-2">mut </span>frag_lens = Vec::with_capacity(max_depth);
+        <span class="comment">// assert to avoid capacity checks?
+        </span><span class="macro">assert_eq!</span>(proof.key_frag.len(), max_depth);
+        <span class="kw">for </span>(idx, key_frag) <span class="kw">in </span>proof.key_frag.iter().enumerate() {
+            <span class="macro">debug_assert_eq!</span>(key_frag.nibbles.len(), <span class="number">2 </span>* key_byte_len);
+            <span class="kw">let </span>leaf_path_bytes = hex_prefix_encode(
+                ctx,
+                <span class="self">self</span>.gate(),
+                <span class="kw-2">&amp;</span>key_frag.nibbles,
+                <span class="kw-2">&amp;</span>key_frag.is_odd,
+                key_byte_len,
+                <span class="bool-val">false</span>,
+            );
+            <span class="kw">if </span>idx &lt; max_depth - <span class="number">1 </span>{
+                <span class="comment">// all except first byte are same as `leaf_path_bytes`
+                </span><span class="kw">let </span>ext_path_byte_first = hex_prefix_encode_first(
+                    ctx,
+                    <span class="self">self</span>.gate(),
+                    <span class="kw-2">&amp;</span>key_frag.nibbles[<span class="number">0</span>],
+                    <span class="kw-2">&amp;</span>key_frag.is_odd,
+                    <span class="bool-val">true</span>,
+                );
+                <span class="kw">let </span>ext_path_bytes = [<span class="kw-2">&amp;</span>[ext_path_byte_first], <span class="kw-2">&amp;</span>leaf_path_bytes[<span class="number">1</span>..]].concat();
+                key_frag_ext_bytes.push(ext_path_bytes);
+            }
+            key_frag_leaf_bytes.push(leaf_path_bytes);
+
+            <span class="kw">let </span>frag_len = hex_prefix_len(ctx, <span class="self">self</span>.gate(), <span class="kw-2">&amp;</span>key_frag.byte_len, <span class="kw-2">&amp;</span>key_frag.is_odd);
+            frag_lens.push(frag_len);
+        }
+
+        <span class="kw">let </span><span class="kw-2">mut </span>key_hexs = Vec::with_capacity(<span class="number">2 </span>* proof.key_byte_len);
+        <span class="kw">for </span>byte <span class="kw">in </span>proof.key_bytes.iter() {
+            <span class="kw">let </span>bits = <span class="self">self</span>.gate().num_to_bits(ctx, byte, <span class="number">8</span>);
+            <span class="kw">let </span>[hex1, hex2] = [<span class="number">4</span>, <span class="number">0</span>].map(|idx| {
+                <span class="self">self</span>.gate().inner_product(
+                    ctx,
+                    bits[idx..idx + <span class="number">4</span>].iter().map(Existing),
+                    (<span class="number">0</span>..<span class="number">4</span>).map(|x| Constant(<span class="self">self</span>.gate().pow_of_two()[x])),
+                )
+            });
+            key_hexs.extend([hex1, hex2]);
+        }
+
+        MPTFixedKeyProofWitness {
+            proof,
+            leaf_parsed,
+            exts_parsed,
+            branches_parsed,
+            key_frag_ext_bytes,
+            key_frag_leaf_bytes,
+            key_hexs,
+            frag_lens,
+        }
+    }
+
+    <span class="kw">pub fn </span>parse_mpt_inclusion_fixed_key_phase1(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        ctx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">&#39;v</span>, F&gt;,
+        witness: MPTFixedKeyProofWitness&lt;<span class="lifetime">&#39;v</span>, F&gt;,
+    ) {
+        <span class="macro">debug_assert_eq!</span>(ctx.current_phase(), <span class="number">1</span>);
+        <span class="kw">let </span>MPTFixedKeyProof {
+            key_bytes: <span class="kw">_</span>,
+            value_bytes,
+            value_byte_len,
+            root_hash_bytes,
+            leaf_bytes: <span class="kw">_</span>,
+            nodes,
+            depth,
+            key_frag,
+            key_byte_len,
+            value_max_byte_len: <span class="kw">_</span>,
+            max_depth,
+        } = witness.proof;
+        <span class="kw">let </span>leaf_parsed = <span class="self">self</span>.parse_leaf_phase1(ctx, witness.leaf_parsed);
+        <span class="kw">let </span>exts_parsed: Vec&lt;ExtensionTrace&lt;<span class="lifetime">&#39;_</span>, F&gt;&gt; =
+            witness.exts_parsed.into_iter().map(|x| <span class="self">self</span>.parse_ext_phase1(ctx, x)).collect();
+        <span class="kw">let </span>branches_parsed: Vec&lt;BranchTrace&lt;<span class="lifetime">&#39;_</span>, F&gt;&gt; = witness
+            .branches_parsed
+            .into_iter()
+            .map(|x| <span class="self">self</span>.parse_nonterminal_branch_phase1(ctx, x))
+            .collect();
+        <span class="kw">let </span>key_frag_ext_byte_rlcs: Vec&lt;<span class="kw">_</span>&gt; = witness
+            .key_frag_ext_bytes
+            .into_iter()
+            .zip(key_frag.iter())
+            .map(|(bytes, frag)| <span class="self">self</span>.compute_rlc_trace(ctx, bytes, frag.byte_len.clone()))
+            .collect();
+        <span class="kw">let </span>key_frag_leaf_byte_rlcs: Vec&lt;<span class="kw">_</span>&gt; = witness
+            .key_frag_leaf_bytes
+            .into_iter()
+            .zip(key_frag.iter())
+            .map(|(bytes, frag)| <span class="self">self</span>.compute_rlc_trace(ctx, bytes, frag.byte_len.clone()))
+            .collect();
+        <span class="kw">let </span>key_hexs = witness.key_hexs;
+
+        <span class="comment">// Match fragments to node key
+        </span><span class="kw">for </span>((ext_parsed, key_frag_ext_byte_rlc), node) <span class="kw">in
+            </span>exts_parsed.iter().zip(key_frag_ext_byte_rlcs.iter()).zip(nodes.iter())
+        {
+            <span class="comment">// When node is extension, check node key RLC equals key frag RLC
+            </span><span class="kw">let </span><span class="kw-2">mut </span>node_key_is_equal = rlc_is_equal(
+                ctx,
+                <span class="self">self</span>.gate(),
+                <span class="kw-2">&amp;</span>ext_parsed.key_path.field_trace,
+                key_frag_ext_byte_rlc,
+            );
+            <span class="comment">// is equal or node not extension
+            </span><span class="kw">let </span>is_not_ext = <span class="self">self</span>.gate().not(ctx, Existing(<span class="kw-2">&amp;</span>node.node_type));
+            node_key_is_equal =
+                <span class="self">self</span>.gate().or(ctx, Existing(<span class="kw-2">&amp;</span>node_key_is_equal), Existing(<span class="kw-2">&amp;</span>is_not_ext));
+            <span class="comment">// assuming node type is not extension if idx &gt; pf.len() [we don&#39;t care what happens for these idx]
+            </span><span class="self">self</span>.gate().assert_is_const(ctx, <span class="kw-2">&amp;</span>node_key_is_equal, F::one());
+        }
+        <span class="kw">let </span>depth_minus_one = <span class="self">self</span>.gate().sub(ctx, Existing(<span class="kw-2">&amp;</span>depth), Constant(F::one()));
+        <span class="comment">// Quiz for auditers: is the following necessary?
+        // match hex-prefix encoding of leaf path to the parsed leaf encoded path
+        </span><span class="kw">let </span>key_frag_leaf_bytes_rlc = rlc_select_from_idx(
+            ctx,
+            <span class="self">self</span>.gate(),
+            key_frag_leaf_byte_rlcs.iter().map(|trace| trace.into()).collect(),
+            <span class="kw-2">&amp;</span>depth_minus_one,
+        );
+        rlc_constrain_equal(ctx, <span class="kw-2">&amp;</span>key_frag_leaf_bytes_rlc, <span class="kw-2">&amp;</span>leaf_parsed.key_path.field_trace);
+
+        <span class="comment">// Check key fragments concatenate to key using hex RLC
+        </span><span class="kw">let </span>key_hex_rlc = <span class="self">self</span>.rlp.rlc.compute_rlc_fixed_len(ctx, <span class="self">self</span>.gate(), key_hexs);
+        <span class="kw">let </span>fragment_rlcs = key_frag
+            .into_iter()
+            .into_iter()
+            .zip(witness.frag_lens.into_iter())
+            .map(|(key_frag, frag_lens)| {
+                <span class="self">self</span>.rlc().compute_rlc(ctx, <span class="self">self</span>.gate(), key_frag.nibbles, frag_lens)
+            })
+            .collect_vec();
+        <span class="self">self</span>.rlp.rlc.load_rlc_cache(
+            ctx,
+            <span class="self">self</span>.rlp.range.gate(),
+            bit_length(<span class="number">2 </span>* key_byte_len <span class="kw">as </span>u64),
+        );
+        <span class="kw">let </span>assigned_len =
+            <span class="self">self</span>.gate().load_constant(ctx, <span class="self">self</span>.gate().get_field_element(key_hex_rlc.len <span class="kw">as </span>u64));
+
+        <span class="self">self</span>.rlp.rlc.constrain_rlc_concat_var(
+            ctx,
+            <span class="self">self</span>.gate(),
+            fragment_rlcs.iter().map(|f| (<span class="kw-2">&amp;</span>f.rlc_val, <span class="kw-2">&amp;</span>f.len, f.max_len)),
+            (<span class="kw-2">&amp;</span>key_hex_rlc.rlc_val, <span class="kw-2">&amp;</span>assigned_len),
+            <span class="kw-2">&amp;</span>depth,
+            max_depth,
+            <span class="self">self</span>.rlc().gamma_pow_cached(),
+        );
+
+        <span class="comment">/* Check value matches. Currently value_bytes is RLC encoded
+         * and value_byte_len is the RLC encoding&#39;s length
+         */
+        </span><span class="kw">let </span>value_rlc_trace =
+            <span class="self">self</span>.rlp.rlc.compute_rlc(ctx, <span class="self">self</span>.gate(), value_bytes, value_byte_len.clone());
+
+        rlc_constrain_equal(ctx, <span class="kw-2">&amp;</span>value_rlc_trace, <span class="kw-2">&amp;</span>leaf_parsed.value.field_trace);
+
+        <span class="comment">/* Check hash chains
+         * hash(node[0]) = root_hash
+         * hash(node[idx + 1]) is in node[idx]
+         * hash(leaf_bytes) is in node[depth - 2]
+         */
+        </span><span class="kw">let </span><span class="kw-2">mut </span>matches = Vec::with_capacity(max_depth - <span class="number">1</span>);
+        <span class="comment">// assert so later array indexing doesn&#39;t do bound check
+        </span><span class="macro">assert_eq!</span>(exts_parsed.len(), max_depth - <span class="number">1</span>);
+        <span class="macro">assert_eq!</span>(branches_parsed.len(), max_depth - <span class="number">1</span>);
+        <span class="macro">assert_eq!</span>(nodes.len(), max_depth - <span class="number">1</span>);
+        <span class="kw">for </span>idx <span class="kw">in </span><span class="number">0</span>..max_depth {
+            <span class="comment">// `node_hash_rlc` can be viewed as a fixed length RLC
+            </span><span class="kw">let </span><span class="kw-2">mut </span>node_hash_rlc = leaf_parsed.leaf_hash_rlc.clone();
+            <span class="kw">if </span>idx &lt; max_depth - <span class="number">1 </span>{
+                node_hash_rlc = rlc_select(
+                    ctx,
+                    <span class="self">self</span>.gate(),
+                    <span class="kw-2">&amp;</span>exts_parsed[idx].ext_hash_rlc,
+                    <span class="kw-2">&amp;</span>branches_parsed[idx].branch_hash_rlc,
+                    <span class="kw-2">&amp;</span>nodes[idx].node_type,
+                );
+                <span class="kw">let </span>is_leaf = <span class="self">self</span>.gate().is_equal(
+                    ctx,
+                    Existing(<span class="kw-2">&amp;</span>depth),
+                    Constant(<span class="self">self</span>.gate().get_field_element((idx + <span class="number">1</span>) <span class="kw">as </span>u64)),
+                );
+                node_hash_rlc = rlc_select(
+                    ctx,
+                    <span class="self">self</span>.gate(),
+                    <span class="kw-2">&amp;</span>leaf_parsed.leaf_hash_rlc,
+                    <span class="kw-2">&amp;</span>node_hash_rlc,
+                    <span class="kw-2">&amp;</span>is_leaf,
+                );
+            }
+            <span class="kw">if </span>idx == <span class="number">0 </span>{
+                <span class="kw">let </span>root_hash_rlc =
+                    <span class="self">self</span>.rlc().compute_rlc_fixed_len(ctx, <span class="self">self</span>.gate(), root_hash_bytes.clone());
+                ctx.constrain_equal(<span class="kw-2">&amp;</span>root_hash_rlc.rlc_val, <span class="kw-2">&amp;</span>node_hash_rlc.rlc_val);
+                <span class="self">self</span>.gate().assert_is_const(
+                    ctx,
+                    <span class="kw-2">&amp;</span>node_hash_rlc.len,
+                    <span class="self">self</span>.gate().get_field_element(<span class="number">32</span>),
+                );
+            } <span class="kw">else </span>{
+                <span class="kw">let </span>ext_ref_rlc = <span class="kw-2">&amp;</span>exts_parsed[idx - <span class="number">1</span>].node_ref.field_trace;
+                <span class="kw">let </span>branch_ref_rlc = rlc_select_from_idx(
+                    ctx,
+                    <span class="self">self</span>.gate(),
+                    branches_parsed[idx - <span class="number">1</span>]
+                        .node_refs
+                        .iter()
+                        .map(|node| (<span class="kw-2">&amp;</span>node.field_trace).into())
+                        .collect(),
+                    <span class="kw-2">&amp;</span>fragment_rlcs[idx - <span class="number">1</span>].values[<span class="number">0</span>],
+                );
+                <span class="kw">let </span>match_hash_rlc = rlc_select(
+                    ctx,
+                    <span class="self">self</span>.gate(),
+                    ext_ref_rlc,
+                    <span class="kw-2">&amp;</span>branch_ref_rlc,
+                    <span class="kw-2">&amp;</span>nodes[idx - <span class="number">1</span>].node_type,
+                );
+                <span class="comment">// as long as one of the RLCs is fixed len (in this case `node_hash_rlc`), we don&#39;t need to check
+                // whether lengths are equal
+                </span><span class="kw">let </span>is_match = rlc_is_equal(ctx, <span class="self">self</span>.gate(), <span class="kw-2">&amp;</span>match_hash_rlc, <span class="kw-2">&amp;</span>node_hash_rlc);
+                matches.push(is_match);
+            }
+        }
+        <span class="kw">let </span>match_sums = <span class="self">self</span>.gate().sum_with_assignments(ctx, matches.iter().map(Existing));
+
+        <span class="kw">let </span>match_cnt = <span class="self">self</span>.gate().select_from_idx(
+            ctx,
+            once(Constant(F::zero())).chain(match_sums.iter().step_by(<span class="number">3</span>).map(Existing)),
+            Existing(<span class="kw-2">&amp;</span>depth_minus_one),
+        );
+        ctx.constrain_equal(<span class="kw-2">&amp;</span>match_cnt, <span class="kw-2">&amp;</span>depth_minus_one);
+    }
+
+    <span class="kw">pub fn </span>parse_mpt_inclusion_var_key(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        _ctx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">&#39;_</span>, F&gt;,
+        _range: <span class="kw-2">&amp;</span>RangeConfig&lt;F&gt;,
+        proof: <span class="kw-2">&amp;</span>MPTVarKeyProof&lt;F&gt;,
+        key_max_byte_len: usize,
+        value_max_byte_len: usize,
+        max_depth: usize,
+    ) {
+        <span class="macro">assert_eq!</span>(proof.key_max_byte_len, key_max_byte_len);
+        <span class="macro">assert_eq!</span>(proof.value_max_byte_len, value_max_byte_len);
+        <span class="macro">assert_eq!</span>(proof.max_depth, max_depth);
+
+        <span class="macro">todo!</span>()
+    }
+}
+
+<span class="kw">pub fn </span>hex_prefix_encode_first&lt;<span class="lifetime">&#39;v</span>, F: ScalarField&gt;(
+    ctx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">&#39;_</span>, F&gt;,
+    gate: <span class="kw-2">&amp;</span><span class="kw">impl </span>GateInstructions&lt;F&gt;,
+    first_nibble: <span class="kw-2">&amp;</span>AssignedValue&lt;<span class="lifetime">&#39;v</span>, F&gt;,
+    is_odd: <span class="kw-2">&amp;</span>AssignedValue&lt;<span class="lifetime">&#39;v</span>, F&gt;,
+    is_ext: bool,
+) -&gt; AssignedValue&lt;<span class="lifetime">&#39;v</span>, F&gt; {
+    <span class="kw">let </span>sixteen = gate.get_field_element(<span class="number">16</span>);
+    <span class="kw">let </span>thirty_two = gate.get_field_element(<span class="number">32</span>);
+    <span class="kw">if </span>is_ext {
+        gate.inner_product(
+            ctx,
+            [Existing(is_odd), Existing(is_odd)],
+            [Constant(sixteen), Existing(first_nibble)],
+        )
+    } <span class="kw">else </span>{
+        <span class="comment">// (1 - is_odd) * 32 + is_odd * (48 + x_0)
+        // | 32 | 16 | is_odd | 32 + 16 * is_odd | is_odd | x_0 | out |
+        </span><span class="kw">let </span>pre_val = Value::known(thirty_two) + Value::known(sixteen) * is_odd.value();
+        <span class="kw">let </span>val = pre_val + first_nibble.value().copied() * is_odd.value();
+        gate.assign_region_last(
+            ctx,
+            <span class="macro">vec!</span>[
+                Constant(thirty_two),
+                Constant(sixteen),
+                Existing(is_odd),
+                Witness(pre_val),
+                Existing(is_odd),
+                Existing(first_nibble),
+                Witness(val),
+            ],
+            <span class="macro">vec!</span>[(<span class="number">0</span>, <span class="prelude-val">None</span>), (<span class="number">3</span>, <span class="prelude-val">None</span>)],
+        )
+    }
+}
+
+<span class="kw">pub fn </span>hex_prefix_encode&lt;<span class="lifetime">&#39;v</span>, F: ScalarField&gt;(
+    ctx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">&#39;_</span>, F&gt;,
+    gate: <span class="kw-2">&amp;</span><span class="kw">impl </span>GateInstructions&lt;F&gt;,
+    key_frag_hexs: <span class="kw-2">&amp;</span>AssignedNibbles&lt;<span class="lifetime">&#39;v</span>, F&gt;,
+    is_odd: <span class="kw-2">&amp;</span>AssignedValue&lt;<span class="lifetime">&#39;v</span>, F&gt;,
+    key_byte_len: usize,
+    is_ext: bool,
+) -&gt; AssignedBytes&lt;<span class="lifetime">&#39;v</span>, F&gt; {
+    <span class="kw">let </span><span class="kw-2">mut </span>path_bytes = Vec::with_capacity(key_byte_len);
+    <span class="kw">let </span>sixteen = gate.get_field_element(<span class="number">16</span>);
+    <span class="kw">for </span>byte_idx <span class="kw">in </span><span class="number">0</span>..=key_byte_len {
+        <span class="kw">if </span>byte_idx == <span class="number">0 </span>{
+            <span class="kw">let </span>byte = hex_prefix_encode_first(ctx, gate, <span class="kw-2">&amp;</span>key_frag_hexs[<span class="number">0</span>], is_odd, is_ext);
+            path_bytes.push(byte);
+        } <span class="kw">else </span>{
+            <span class="kw">let </span>[odd_byte, even_byte] = [<span class="number">0</span>, <span class="number">1</span>].map(|is_even| {
+                gate.mul_add(
+                    ctx,
+                    Existing(<span class="kw-2">&amp;</span>key_frag_hexs[<span class="number">2 </span>* byte_idx - <span class="number">1 </span>- is_even]),
+                    Constant(sixteen),
+                    <span class="kw">if </span>is_even == <span class="number">0 </span>&amp;&amp; byte_idx &gt;= key_byte_len {
+                        Constant(F::zero())
+                    } <span class="kw">else </span>{
+                        Existing(<span class="kw-2">&amp;</span>key_frag_hexs[<span class="number">2 </span>* byte_idx - is_even])
+                    },
+                )
+            });
+            <span class="kw">let </span>byte =
+                gate.select(ctx, Existing(<span class="kw-2">&amp;</span>odd_byte), Existing(<span class="kw-2">&amp;</span>even_byte), Existing(is_odd));
+            path_bytes.push(byte);
+        }
+    }
+    path_bytes
+}
+
+<span class="kw">pub fn </span>hex_prefix_len&lt;<span class="lifetime">&#39;v</span>, F: ScalarField&gt;(
+    ctx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">&#39;v</span>, F&gt;,
+    gate: <span class="kw-2">&amp;</span><span class="kw">impl </span>GateInstructions&lt;F&gt;,
+    key_frag_byte_len: <span class="kw-2">&amp;</span>AssignedValue&lt;<span class="lifetime">&#39;v</span>, F&gt;,
+    is_odd: <span class="kw-2">&amp;</span>AssignedValue&lt;<span class="lifetime">&#39;v</span>, F&gt;,
+) -&gt; AssignedValue&lt;<span class="lifetime">&#39;v</span>, F&gt; {
+    <span class="kw">let </span>two = gate.get_field_element(<span class="number">2</span>);
+    <span class="kw">let </span>pre_val = Value::known(two) * key_frag_byte_len.value() + is_odd.value();
+    <span class="comment">// 2 * key_frag_byte_len + is_odd - 2
+    </span><span class="kw">let </span>val = pre_val - Value::known(two);
+    <span class="kw">let </span>hex_len = gate.assign_region_last(
+        ctx,
+        <span class="macro">vec!</span>[
+            Existing(is_odd),
+            Constant(two),
+            Existing(key_frag_byte_len),
+            Witness(pre_val),
+            Constant(-two),
+            Constant(F::one()),
+            Witness(val),
+        ],
+        <span class="macro">vec!</span>[(<span class="number">0</span>, <span class="prelude-val">None</span>), (<span class="number">3</span>, <span class="prelude-val">None</span>)],
+    );
+    <span class="kw">let </span>byte_len_is_zero = gate.is_zero(ctx, key_frag_byte_len);
+    <span class="comment">// TODO: should we constrain is_odd to be 0 when is_zero = 1?
+    </span>gate.select(ctx, Constant(F::zero()), Existing(<span class="kw-2">&amp;</span>hex_len), Existing(<span class="kw-2">&amp;</span>byte_len_is_zero))
+}
+
+<span class="attribute">#[derive(Clone, Debug)]
+</span><span class="kw">pub struct </span>MPTFixedKeyInput {
+    <span class="comment">// claim specification: (path, value)
+    </span><span class="doccomment">/// A Merkle-Patricia Trie is a mapping `path =&gt; value`
+    ///
+    /// As an example, the MPT state trie of Ethereum has
+    /// `path = keccak256(address) =&gt; value = rlp(account)`
+    </span><span class="kw">pub </span>path: H256,
+    <span class="kw">pub </span>value: Vec&lt;u8&gt;,
+    <span class="kw">pub </span>root_hash: H256,
+
+    <span class="kw">pub </span>proof: Vec&lt;Vec&lt;u8&gt;&gt;,
+
+    <span class="kw">pub </span>value_max_byte_len: usize,
+    <span class="kw">pub </span>max_depth: usize,
+}
+
+<span class="macro">lazy_static! </span>{
+    <span class="kw">static </span><span class="kw-2">ref </span>DUMMY_BRANCH: Vec&lt;u8&gt; = Vec::from_hex(<span class="string">&quot;f1808080808080808080808080808080a0000000000000000000000000000000000000000000000000000000000000000080&quot;</span>).unwrap();
+    <span class="kw">static </span><span class="kw-2">ref </span>DUMMY_EXT: Vec&lt;u8&gt; = Vec::from_hex(
+            <span class="string">&quot;e21ba00000000000000000000000000000000000000000000000000000000000000000&quot;</span>).unwrap();
+}
+
+<span class="kw">impl </span>MPTFixedKeyInput {
+    <span class="kw">pub fn </span>assign&lt;<span class="lifetime">&#39;v</span>, F: Field&gt;(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        ctx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">&#39;_</span>, F&gt;,
+        gate: <span class="kw-2">&amp;</span><span class="kw">impl </span>GateInstructions&lt;F&gt;,
+    ) -&gt; MPTFixedKeyProof&lt;<span class="lifetime">&#39;v</span>, F&gt; {
+        <span class="kw">let </span><span class="self">Self </span>{ path, value, root_hash, proof, value_max_byte_len, max_depth } = <span class="self">self</span>;
+        <span class="kw">let </span>depth = proof.len();
+        <span class="macro">assert!</span>(depth &lt;= <span class="kw-2">*</span>max_depth);
+        <span class="kw">let </span><span class="kw-2">mut </span>value = value.clone();
+        <span class="kw">let </span><span class="kw-2">mut </span>proof = proof.clone();
+        <span class="kw">let </span>value_max_byte_len = <span class="kw-2">*</span>value_max_byte_len;
+        <span class="kw">let </span>max_depth = <span class="kw-2">*</span>max_depth;
+        <span class="kw">let </span>bytes_to_nibbles = |bytes: <span class="kw-2">&amp;</span>[u8]| {
+            <span class="kw">let </span><span class="kw-2">mut </span>nibbles = Vec::with_capacity(bytes.len() * <span class="number">2</span>);
+            <span class="kw">for </span>byte <span class="kw">in </span>bytes {
+                nibbles.push(byte &gt;&gt; <span class="number">4</span>);
+                nibbles.push(byte &amp; <span class="number">0xf</span>);
+            }
+            nibbles
+        };
+
+        <span class="kw">let </span>path_nibbles = bytes_to_nibbles(path.as_bytes());
+        <span class="kw">let </span><span class="kw-2">mut </span>path_idx = <span class="number">0</span>;
+
+        <span class="comment">// below &quot;key&quot; and &quot;path&quot; are used interchangeably, sorry for confusion
+        </span><span class="kw">const </span>KEY_BYTE_LEN: usize = <span class="number">32</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>leaf = proof.pop().unwrap();
+        <span class="kw">let </span>(<span class="kw">_</span>, max_leaf_bytes) = max_leaf_lens(KEY_BYTE_LEN, value_max_byte_len);
+
+        <span class="kw">let </span>(<span class="kw">_</span>, max_ext_bytes) = max_ext_lens(KEY_BYTE_LEN);
+        <span class="kw">let </span>max_branch_bytes = MAX_BRANCH_LENS.<span class="number">1</span>;
+        <span class="kw">let </span>max_node_bytes = max(max_ext_bytes, max_branch_bytes);
+
+        <span class="kw">let </span><span class="kw-2">mut </span>key_frag = Vec::with_capacity(max_depth);
+        <span class="kw">let </span><span class="kw-2">mut </span>nodes = Vec::with_capacity(max_depth - <span class="number">1</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>process_node = |node: <span class="kw-2">&amp;</span>[u8]| {
+            <span class="kw">let </span>decode = Rlp::new(node);
+            <span class="kw">let </span>node_type = decode.item_count().unwrap() == <span class="number">2</span>;
+            <span class="kw">if </span>node_type {
+                <span class="kw">let </span>encoded_path = decode.at(<span class="number">0</span>).unwrap().data().unwrap();
+                <span class="kw">let </span>byte_len = encoded_path.len();
+                <span class="kw">let </span>encoded_nibbles = bytes_to_nibbles(encoded_path);
+                <span class="kw">let </span>is_odd = encoded_nibbles[<span class="number">0</span>] == <span class="number">1u8 </span>|| encoded_nibbles[<span class="number">0</span>] == <span class="number">3u8</span>;
+                <span class="kw">let </span><span class="kw-2">mut </span>frag = encoded_nibbles[<span class="number">2 </span>- usize::from(is_odd)..].to_vec();
+                path_idx += frag.len();
+                frag.resize(<span class="number">2 </span>* KEY_BYTE_LEN, <span class="number">0</span>);
+                key_frag.push((frag, byte_len, is_odd));
+            } <span class="kw">else </span>{
+                <span class="kw">let </span><span class="kw-2">mut </span>frag = <span class="macro">vec!</span>[<span class="number">0u8</span>; <span class="number">2 </span>* KEY_BYTE_LEN];
+                frag[<span class="number">0</span>] = path_nibbles[path_idx];
+                key_frag.push((frag, <span class="number">1</span>, <span class="bool-val">true</span>));
+                path_idx += <span class="number">1</span>;
+            }
+            node_type
+        };
+        <span class="kw">for </span><span class="kw-2">mut </span>node <span class="kw">in </span>proof {
+            <span class="kw">let </span>node_type = process_node(<span class="kw-2">&amp;</span>node);
+            node.resize(max_node_bytes, <span class="number">0</span>);
+            nodes.push((node, node_type));
+        }
+        <span class="kw">let </span><span class="kw-2">mut </span>dummy_branch = DUMMY_BRANCH.clone();
+        dummy_branch.resize(max_node_bytes, <span class="number">0</span>);
+        nodes.resize(max_depth - <span class="number">1</span>, (dummy_branch, <span class="bool-val">false</span>));
+
+        process_node(<span class="kw-2">&amp;</span>leaf);
+        key_frag.resize(max_depth, (<span class="macro">vec!</span>[<span class="number">0u8</span>; <span class="number">2 </span>* KEY_BYTE_LEN], <span class="number">0</span>, <span class="bool-val">false</span>));
+        leaf.resize(max_leaf_bytes, <span class="number">0</span>);
+
+        <span class="comment">// assign all values
+        </span><span class="kw">let </span>value_byte_len = gate.load_witness(ctx, Value::known(F::from(value.len() <span class="kw">as </span>u64)));
+        <span class="kw">let </span>depth = gate.load_witness(ctx, Value::known(F::from(depth <span class="kw">as </span>u64)));
+        <span class="kw">let </span><span class="kw-2">mut </span>load_bytes = |bytes: <span class="kw-2">&amp;</span>[u8]| {
+            gate.assign_witnesses(ctx, bytes.iter().map(|x| Value::known(F::from(<span class="kw-2">*</span>x <span class="kw">as </span>u64))))
+        };
+        <span class="kw">let </span>key_bytes = load_bytes(path.as_bytes());
+        value.resize(value_max_byte_len, <span class="number">0</span>);
+        <span class="kw">let </span>value_bytes = load_bytes(<span class="kw-2">&amp;</span>value);
+        <span class="kw">let </span>root_hash_bytes = load_bytes(root_hash.as_bytes());
+        <span class="kw">let </span>leaf_bytes = load_bytes(<span class="kw-2">&amp;</span>leaf);
+        <span class="kw">let </span>nodes = nodes
+            .into_iter()
+            .map(|(node_bytes, node_type)| {
+                <span class="kw">let </span>rlp_bytes = gate.assign_witnesses(
+                    ctx,
+                    node_bytes.iter().map(|x| Value::known(F::from(<span class="kw-2">*</span>x <span class="kw">as </span>u64))),
+                );
+                <span class="kw">let </span>node_type = gate.load_witness(ctx, Value::known(F::from(node_type)));
+                MPTNode { rlp_bytes, node_type }
+            })
+            .collect_vec();
+        <span class="kw">let </span>key_frag = key_frag
+            .into_iter()
+            .map(|(nibbles, byte_len, is_odd)| {
+                <span class="kw">let </span>nibbles = gate.assign_witnesses(
+                    ctx,
+                    nibbles.iter().map(|x| Value::known(F::from(<span class="kw-2">*</span>x <span class="kw">as </span>u64))),
+                );
+                <span class="kw">let </span>byte_len = gate.load_witness(ctx, Value::known(F::from(byte_len <span class="kw">as </span>u64)));
+                <span class="kw">let </span>is_odd = gate.load_witness(ctx, Value::known(F::from(is_odd)));
+                MPTKeyFragment { nibbles, is_odd, byte_len }
+            })
+            .collect_vec();
+
+        MPTFixedKeyProof {
+            key_bytes,
+            value_bytes,
+            value_byte_len,
+            root_hash_bytes,
+            leaf_bytes,
+            nodes,
+            depth,
+            key_frag,
+            key_byte_len: KEY_BYTE_LEN,
+            value_max_byte_len,
+            max_depth,
+        }
+    }
+}
+</code></pre></div>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="axiom_eth" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.66.0-nightly (0da281b60 2022-10-27)" ></div></body></html>

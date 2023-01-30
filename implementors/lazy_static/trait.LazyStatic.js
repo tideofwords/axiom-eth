@@ -1,0 +1,3 @@
+(function() {var implementors = {
+"axiom_eth":[["impl <a class=\"trait\" href=\"https://docs.rs/lazy_static/1.4.0/lazy_static/trait.LazyStatic.html\" title=\"trait lazy_static::LazyStatic\">LazyStatic</a> for <a class=\"struct\" href=\"axiom_eth/mpt/struct.MAX_BRANCH_LENS.html\" title=\"struct axiom_eth::mpt::MAX_BRANCH_LENS\">MAX_BRANCH_LENS</a>"]]
+};if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

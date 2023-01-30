@@ -1,0 +1,4 @@
+(function() {var implementors = {
+"axiom_eth":[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/nightly/core/fmt/trait.Display.html\" title=\"trait core::fmt::Display\">Display</a> for <a class=\"enum\" href=\"axiom_eth/enum.Network.html\" title=\"enum axiom_eth::Network\">Network</a>"]],
+"header_chain":[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/nightly/core/fmt/trait.Display.html\" title=\"trait core::fmt::Display\">Display</a> for <a class=\"enum\" href=\"header_chain/enum.CliFinality.html\" title=\"enum header_chain::CliFinality\">CliFinality</a>"]]
+};if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

@@ -1,0 +1,3 @@
+(function() {var implementors = {
+"axiom_eth":[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/nightly/core/ops/deref/trait.Deref.html\" title=\"trait core::ops::deref::Deref\">Deref</a> for <a class=\"struct\" href=\"axiom_eth/mpt/struct.MAX_BRANCH_LENS.html\" title=\"struct axiom_eth::mpt::MAX_BRANCH_LENS\">MAX_BRANCH_LENS</a>"]]
+};if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
