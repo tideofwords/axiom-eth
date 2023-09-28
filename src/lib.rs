@@ -6,6 +6,7 @@ pub mod mpt;
 pub mod rlp;
 pub mod storage;
 pub mod util;
+pub mod chal;
 
 #[cfg(feature = "providers")]
 pub mod providers;
